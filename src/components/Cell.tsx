@@ -1,10 +1,23 @@
-import { useRef } from "react";
-import { Sprite } from "./Sprite.jsx";
-import { cellSize } from "../constants/theme.js";
+import { useRef, type MouseEvent } from "react";
+import { Sprite } from "./Sprite";
+import { cellSize } from "../constants/theme";
+import type { Cell as CellData } from "../types/board";
 
-export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, foreseeing, foreseePreview, crossTarget }) {
-  const ref = useRef(null);
-  const handleContext = (e) => { e.preventDefault(); onRightClick(); };
+type CellProps = {
+  cell: CellData;
+  onClick: (e: MouseEvent<HTMLDivElement>) => void;
+  onRightClick: () => void;
+  gameOver: boolean;
+  peeking: boolean;
+  marked: boolean;
+  foreseeing: boolean;
+  foreseePreview: boolean;
+  crossTarget: boolean;
+};
+
+export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, foreseeing, foreseePreview, crossTarget }: CellProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handleContext = (e: MouseEvent<HTMLDivElement>) => { e.preventDefault(); onRightClick(); };
 
   if (!cell.revealed && !gameOver) {
     const showPeek = peeking && cell.type === "dog";

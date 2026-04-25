@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useLocalStorageState } from "./hooks/useLocalStorageState.js";
-import { Sprite } from "./components/Sprite.jsx";
-import { Cell } from "./components/Cell.jsx";
-import { STAGES } from "./constants/stages.js";
-import { SCORING } from "./constants/scoring.js";
-import { SKILLS } from "./constants/skills.js";
-import { CAT_TYPES, INITIAL_UNLOCKED } from "./constants/cats.js";
-import { cellSize, ff } from "./constants/theme.js";
-import { createBoard, floodFill } from "./lib/board.js";
+import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { Sprite } from "./components/Sprite";
+import { Cell } from "./components/Cell";
+import { STAGES } from "./constants/stages";
+import { SCORING } from "./constants/scoring";
+import { SKILLS } from "./constants/skills";
+import { CAT_TYPES, INITIAL_UNLOCKED } from "./constants/cats";
+import { cellSize, ff } from "./constants/theme";
+import { createBoard, floodFill } from "./lib/board";
 import bgUrl from "./assets/main.png";
 import logoUrl from "./assets/title.png";
 

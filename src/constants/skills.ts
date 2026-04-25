@@ -1,4 +1,6 @@
-export const SKILLS = {
+import type { Skill, SkillType } from "../types/skill";
+
+export const SKILLS: Record<SkillType, Skill> = {
   heal:    { name: "回復",         icon: "❤️", desc: "ライフを1回復", color: "#ec407a" },
   lucky:   { name: "ラッキー",     icon: "🍀", desc: "次のダメージを無効", color: "#66bb6a" },
   pawhit:  { name: "ねこパンチ",   icon: "🐾", desc: "安全マス3つを開く", color: "#42a5f5" },

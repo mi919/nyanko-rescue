@@ -10,4 +10,4 @@ export const SCORING = {
   flagMaster: 500,
   noHit: 500,
   noSkill: 300,
-};
+} as const;

@@ -1,6 +1,8 @@
-import { CAT_TYPES, STAGE_RARITY_WEIGHTS } from "../constants/cats.js";
+import { CAT_TYPES, STAGE_RARITY_WEIGHTS } from "../constants/cats";
+import type { CatType } from "../types/cat";
+import type { Cell, CreateBoardResult } from "../types/board";
 
-export function pickWeightedCat(stageIdx) {
+export function pickWeightedCat(stageIdx: number): CatType {
   const weights = STAGE_RARITY_WEIGHTS[stageIdx] || STAGE_RARITY_WEIGHTS[0];
   const pool = CAT_TYPES.map(c => ({ cat: c, w: weights[c.rarity - 1] || 0 })).filter(x => x.w > 0);
   const total = pool.reduce((s, x) => s + x.w, 0);
@@ -9,9 +11,15 @@ export function pickWeightedCat(stageIdx) {
   return pool[0].cat;
 }
 
-export function createBoard(rows, cols, dogs, cats, stageIdx = 0) {
+export function createBoard(
+  rows: number,
+  cols: number,
+  dogs: number,
+  cats: number,
+  stageIdx: number = 0
+): CreateBoardResult {
   const total = rows * cols;
-  const board = Array.from({ length: total }, () => ({
+  const board: Cell[] = Array.from({ length: total }, () => ({
     type: "empty", revealed: false, flagged: false, catType: null, dogCount: 0, catCount: 0,
   }));
   const indices = Array.from({ length: total }, (_, i) => i);
@@ -44,7 +52,7 @@ export function createBoard(rows, cols, dogs, cats, stageIdx = 0) {
   }
   // Find a "green-number-only" tile (no dogs nearby, has cats nearby)
   // to use as a starting hint - but DO NOT reveal it here, return the index
-  const greenHintCandidates = [];
+  const greenHintCandidates: number[] = [];
   for (let i = 0; i < total; i++) {
     if (board[i].type === "empty" && board[i].dogCount === 0 && board[i].catCount > 0) {
       greenHintCandidates.push(i);
@@ -56,11 +64,11 @@ export function createBoard(rows, cols, dogs, cats, stageIdx = 0) {
   return { board, hintIdx };
 }
 
-export function floodFill(board, rows, cols, startIdx) {
-  const queue = [startIdx];
-  const visited = new Set();
+export function floodFill(board: Cell[], rows: number, cols: number, startIdx: number): Cell[] {
+  const queue: number[] = [startIdx];
+  const visited = new Set<number>();
   while (queue.length > 0) {
-    const idx = queue.shift();
+    const idx = queue.shift()!;
     if (visited.has(idx)) continue;
     visited.add(idx);
     board[idx].revealed = true;

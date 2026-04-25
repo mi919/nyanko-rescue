@@ -1,4 +1,6 @@
-export const CAT_TYPES = [
+import type { CatKey, CatType } from "../types/cat";
+
+export const CAT_TYPES: readonly CatType[] = [
   { key: "chatora",  name: "ちゃとら",       skill: "heal",    rarity: 1 },
   { key: "hachi",    name: "はちわれ",       skill: "lucky",   rarity: 1 },
   { key: "mike",     name: "みけねこ",       skill: "pawhit",  rarity: 1 },
@@ -13,11 +15,11 @@ export const CAT_TYPES = [
 
 // Stage-specific rarity weights: [stageIdx][rarity-1]
 // Steep slope — ★4 is very rare, encourages dedicated grinding of はいきょ
-export const STAGE_RARITY_WEIGHTS = [
+export const STAGE_RARITY_WEIGHTS: readonly (readonly number[])[] = [
   [100, 0,  0,  0],   // にわ: ★1のみ
   [50,  50, 0,  0],   // こうえん: ★1=50%, ★2=50%
   [50,  35, 15, 0],   // しょうてんがい: ★1=50%, ★2=35%, ★3=15%
   [50,  30, 15, 5],   // はいきょ: ★1=50%, ★2=30%, ★3=15%, ★4=5%
 ];
 
-export const INITIAL_UNLOCKED = ["chatora"];
+export const INITIAL_UNLOCKED: readonly CatKey[] = ["chatora"];

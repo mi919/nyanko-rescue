@@ -1,7 +1,14 @@
-import { SPRITE_URL, SPRITE_POS, SPRITE_SIZE } from "../constants/sprite.js";
+import type { CSSProperties } from "react";
+import { SPRITE_URL, SPRITE_POS, SPRITE_SIZE, type SpriteName } from "../constants/sprite";
+
+type SpriteProps = {
+  name: SpriteName;
+  size?: number;
+  style?: CSSProperties;
+};
 
 // Sprite component: uses CSS background-position for efficient rendering
-export function Sprite({ name, size = 32, style = {} }) {
+export function Sprite({ name, size = 32, style = {} }: SpriteProps) {
   const pos = SPRITE_POS[name];
   if (!pos) return null;
   const scale = size / SPRITE_SIZE;
