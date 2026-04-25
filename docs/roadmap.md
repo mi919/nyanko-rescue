@@ -11,6 +11,7 @@
 - [x] プロトタイプ（`samples/nyanko-rescue.jsx`）を `src/App.jsx` に取り込み、`BG_URL` / `LOGO_URL` を `assets/` からの import に置換
 - [x] Dockerfile（マルチステージ: build → nginx）と docker-compose.yml（dev / prod プロファイル）
 - [x] `localStorage` 永続化（`unlockedCats` / `stageBest` / `lapCount` / `companion`）
+- [x] 開発環境セットアップ手順ドキュメント（`docs/development-setup.md`）
 
 ### コアゲームプレイ
 - [x] マインスイーパー基本ロジック（犬/猫の2色数字表示）
