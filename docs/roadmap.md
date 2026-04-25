@@ -6,6 +6,12 @@
 
 ## 1. 実装済み機能（v2.1）
 
+### プロジェクト基盤（v2.2 初版）
+- [x] Vite + React 18 プロジェクトセットアップ（`package.json` / `vite.config.js` / `index.html` / `src/main.jsx`）
+- [x] プロトタイプ（`samples/nyanko-rescue.jsx`）を `src/App.jsx` に取り込み、`BG_URL` / `LOGO_URL` を `assets/` からの import に置換
+- [x] Dockerfile（マルチステージ: build → nginx）と docker-compose.yml（dev / prod プロファイル）
+- [x] `localStorage` 永続化（`unlockedCats` / `stageBest` / `lapCount` / `companion`）
+
 ### コアゲームプレイ
 - [x] マインスイーパー基本ロジック（犬/猫の2色数字表示）
 - [x] フラッドフィル連鎖開封
@@ -80,10 +86,10 @@
 
 | 項目 | 説明 | 工数目安 |
 |------|------|---------|
-| **localStorage永続化** | unlockedCats/stageBest/lapCountの保存 | 小 |
 | **未アンロック猫のシルエット表示** | 図鑑・お供選択で🔒の代わりに影絵表示 | 中 |
 | **ステージ別背景画像** | 現在の単色背景をイラスト背景に置換 | 中（画像制作） |
 | **エンディング画面** | 現在は`screen="ending"`だが未実装 | 小 |
+| **SPRITE / DOG_BARK の外部ファイル化** | 現在 base64 埋め込み。`assets/sprites.png` / `assets/dog-bark.png` への分離 | 小 |
 
 ### 優先度: 中
 
@@ -129,6 +135,7 @@
 | 1.2 | 2026/04/08 | トースト化、フラグモード、ヒント750ms |
 | 2.0 | 2026/04/13 | スキルシステム（4種）、お供選択、レアリティ、スコア詳細 |
 | 2.1 | 2026/04/19 | 全10スキル実装、周回システム、仲間との出会い画面、じゅうじサーチ光演出 |
+| 2.2 | 2026/04/25 | Vite + React プロジェクト化（初版）、Docker構成、localStorage永続化 |
 
 ---
 
