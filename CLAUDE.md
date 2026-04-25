@@ -8,7 +8,7 @@
 
 Vite + React + Dockerプロジェクトへの再構築が目標。
 
-プロトタイプは sample/ に配置。
+プロトタイプは samples/ に配置。
 単一JSXファイル（`nyanko-rescue.jsx`、2850行、469KB）のプロトタイプを参考資料とする。
 
 ## ドキュメント
