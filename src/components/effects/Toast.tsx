@@ -7,18 +7,15 @@ type ToastProps = {
 
 export function Toast({ message, gameState }: ToastProps) {
   if (!message) return null;
+  const bg = gameState === "lost" ? "#ffcdd2" : gameState === "won" ? "#c8e6c9" : "#fff9c4";
   return (
-    <div style={{
-      position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)",
-      background: gameState === "lost" ? "#ffcdd2" : gameState === "won" ? "#c8e6c9" : "#fff9c4",
-      borderRadius: 24, padding: "10px 20px",
-      fontWeight: 700, fontSize: 14, color: "#333",
-      boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-      zIndex: 150, pointerEvents: "none",
-      border: "2px solid rgba(255,255,255,0.8)",
-      animation: gameState === "lost" ? "shake 0.4s" : "toastIn 0.3s ease-out",
-      maxWidth: "90%", textAlign: "center", whiteSpace: "nowrap",
-    }}>
+    <div
+      className="fixed top-3 left-1/2 -translate-x-1/2 rounded-3xl px-5 py-2.5 font-bold text-sm text-[#333] shadow-[0_6px_20px_rgba(0,0,0,0.2)] z-[150] pointer-events-none border-2 border-white/80 max-w-[90%] text-center whitespace-nowrap"
+      style={{
+        background: bg,
+        animation: gameState === "lost" ? "shake 0.4s" : "toastIn 0.3s ease-out",
+      }}
+    >
       {message}
     </div>
   );

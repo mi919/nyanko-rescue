@@ -14,13 +14,13 @@ export function Sprite({ name, size = 32, style = {} }: SpriteProps) {
   const scale = size / SPRITE_SIZE;
   return (
     <div
+      className="bg-no-repeat"
       style={{
         width: size,
         height: size,
         backgroundImage: `url(${SPRITE_URL})`,
         backgroundPosition: `-${pos.x * scale}px -${pos.y * scale}px`,
         backgroundSize: `${256 * scale}px ${192 * scale}px`,
-        backgroundRepeat: "no-repeat",
         imageRendering: "auto",
         ...style,
       }}
