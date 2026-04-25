@@ -1,11 +1,10 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { useCallback, useEffect, useRef, useMemo } from "react";
 import { Sprite } from "./components/Sprite";
 import { Cell } from "./components/Cell";
 import { STAGES } from "./constants/stages";
 import { SCORING } from "./constants/scoring";
 import { SKILLS } from "./constants/skills";
-import { CAT_TYPES, INITIAL_UNLOCKED } from "./constants/cats";
+import { CAT_TYPES } from "./constants/cats";
 import { cellSize, ff } from "./constants/theme";
 import { createBoard, floodFill } from "./lib/board";
 import { DogAttack } from "./components/effects/DogAttack";
@@ -22,6 +21,11 @@ import { CollectionModal } from "./components/modals/CollectionModal";
 import { TitleScreen } from "./screens/TitleScreen";
 import { EncounterScreen } from "./screens/EncounterScreen";
 import { EndingScreen } from "./screens/EndingScreen";
+import { useUiStore } from "./stores/uiStore";
+import { useGameStore } from "./stores/gameStore";
+import { useSkillStore } from "./stores/skillStore";
+import { useProgressStore } from "./stores/progressStore";
+import { useEffectStore } from "./stores/effectStore";
 
 // ═══════════════════════════════════════════════════════════════
 // 🐱 にゃんこレスキュー — Cat Rescue Minesweeper (sprite version)
@@ -38,29 +42,51 @@ import { EndingScreen } from "./screens/EndingScreen";
 
 
 export default function App() {
-  const [stageIdx, setStageIdx] = useState(0);
-  const [board, setBoard] = useState([]);
-  const [lives, setLives] = useState(3);
-  const [rescued, setRescued] = useState([]);
-  const [collection, setCollection] = useState([]);
-  const [gameState, setGameState] = useState("playing");
-  const [message, setMessage] = useState("");
-  const [showCollection, setShowCollection] = useState(false);
-  const [score, setScore] = useState(0);
+  const stageIdx = useGameStore(s => s.stageIdx);
+  const setStageIdx = useGameStore(s => s.setStageIdx);
+  const board = useGameStore(s => s.board);
+  const setBoard = useGameStore(s => s.setBoard);
+  const lives = useGameStore(s => s.lives);
+  const setLives = useGameStore(s => s.setLives);
+  const rescued = useGameStore(s => s.rescued);
+  const setRescued = useGameStore(s => s.setRescued);
+  const collection = useProgressStore(s => s.collection);
+  const setCollection = useProgressStore(s => s.setCollection);
+  const gameState = useGameStore(s => s.gameState);
+  const setGameState = useGameStore(s => s.setGameState);
+  const message = useUiStore(s => s.message);
+  const setMessage = useUiStore(s => s.setMessage);
+  const showCollection = useUiStore(s => s.showCollection);
+  const setShowCollection = useUiStore(s => s.setShowCollection);
+  const score = useGameStore(s => s.score);
+  const setScore = useGameStore(s => s.setScore);
   // Per-stage scoring tracking
-  const [catRescueCount, setCatRescueCount] = useState(0);
-  const [cellsOpened, setCellsOpened] = useState(0);
-  const [manualNumberCells, setManualNumberCells] = useState(0);
-  const [stageStartTime, setStageStartTime] = useState(0);
-  const [skillUsedThisStage, setSkillUsedThisStage] = useState(false);
-  const [hitDogThisStage, setHitDogThisStage] = useState(false);
-  const [stageBest, setStageBest] = useLocalStorageState("nyanko_stageBest", {});
-  const [scoreBreakdown, setScoreBreakdown] = useState(null);
-  const [isNewBest, setIsNewBest] = useState(false);
-  const [animatedTotal, setAnimatedTotal] = useState(0);
-  const [logoTapCount, setLogoTapCount] = useState(0);
-  const [debugMode, setDebugMode] = useState(false);
-  const [pawEffects, setPawEffects] = useState([]); // [{x, y, id, delay, big}]
+  const catRescueCount = useGameStore(s => s.catRescueCount);
+  const setCatRescueCount = useGameStore(s => s.setCatRescueCount);
+  const cellsOpened = useGameStore(s => s.cellsOpened);
+  const setCellsOpened = useGameStore(s => s.setCellsOpened);
+  const manualNumberCells = useGameStore(s => s.manualNumberCells);
+  const setManualNumberCells = useGameStore(s => s.setManualNumberCells);
+  const stageStartTime = useGameStore(s => s.stageStartTime);
+  const setStageStartTime = useGameStore(s => s.setStageStartTime);
+  const skillUsedThisStage = useSkillStore(s => s.skillUsedThisStage);
+  const setSkillUsedThisStage = useSkillStore(s => s.setSkillUsedThisStage);
+  const hitDogThisStage = useGameStore(s => s.hitDogThisStage);
+  const setHitDogThisStage = useGameStore(s => s.setHitDogThisStage);
+  const stageBest = useProgressStore(s => s.stageBest);
+  const setStageBest = useProgressStore(s => s.setStageBest);
+  const scoreBreakdown = useGameStore(s => s.scoreBreakdown);
+  const setScoreBreakdown = useGameStore(s => s.setScoreBreakdown);
+  const isNewBest = useGameStore(s => s.isNewBest);
+  const setIsNewBest = useGameStore(s => s.setIsNewBest);
+  const animatedTotal = useGameStore(s => s.animatedTotal);
+  const setAnimatedTotal = useGameStore(s => s.setAnimatedTotal);
+  const logoTapCount = useUiStore(s => s.logoTapCount);
+  const setLogoTapCount = useUiStore(s => s.setLogoTapCount);
+  const debugMode = useUiStore(s => s.debugMode);
+  const setDebugMode = useUiStore(s => s.setDebugMode);
+  const pawEffects = useEffectStore(s => s.pawEffects);
+  const setPawEffects = useEffectStore(s => s.setPawEffects);
   const boardRef = useRef(null);
 
   const triggerPawEffects = (indices, options = {}) => {
@@ -87,37 +113,66 @@ export default function App() {
       setPawEffects(prev => prev.filter(e => !ids.has(e.id)));
     }, totalDuration);
   };
-  const [screen, setScreen] = useState("title");
-  const [showRules, setShowRules] = useState(false);
-  const [flagMode, setFlagMode] = useState(false);
-  const [dogAttack, setDogAttack] = useState(false);
-  const [catRescue, setCatRescue] = useState(null);
+  const screen = useUiStore(s => s.screen);
+  const setScreen = useUiStore(s => s.setScreen);
+  const showRules = useUiStore(s => s.showRules);
+  const setShowRules = useUiStore(s => s.setShowRules);
+  const flagMode = useUiStore(s => s.flagMode);
+  const setFlagMode = useUiStore(s => s.setFlagMode);
+  const dogAttack = useEffectStore(s => s.dogAttack);
+  const setDogAttack = useEffectStore(s => s.setDogAttack);
+  const catRescue = useEffectStore(s => s.catRescue);
+  const setCatRescue = useEffectStore(s => s.setCatRescue);
   // Skill system state
-  const [unlockedCats, setUnlockedCats] = useLocalStorageState("nyanko_unlockedCats", INITIAL_UNLOCKED);
-  const [companion, setCompanion] = useLocalStorageState("nyanko_companion", "chatora");
-  const [skillGauge, setSkillGauge] = useState(0);
-  const [unlockBanner, setUnlockBanner] = useState(null); // { catKey, catName }
+  const unlockedCats = useProgressStore(s => s.unlockedCats);
+  const setUnlockedCats = useProgressStore(s => s.setUnlockedCats);
+  const companion = useProgressStore(s => s.companion);
+  const setCompanion = useProgressStore(s => s.setCompanion);
+  const skillGauge = useSkillStore(s => s.skillGauge);
+  const setSkillGauge = useSkillStore(s => s.setSkillGauge);
+  const unlockBanner = useEffectStore(s => s.unlockBanner);
+  const setUnlockBanner = useEffectStore(s => s.setUnlockBanner);
   // Lap (周回) system
-  const [lapCount, setLapCount] = useLocalStorageState("nyanko_lapCount", 0);
-  const [lapCats, setLapCats] = useState([]); // all cats rescued across stages this lap
-  const [rouletteResult, setRouletteResult] = useState(null); // { catKey, catName } selected by roulette
-  const [roulettePhase, setRoulettePhase] = useState("idle"); // "idle"|"spinning"|"result"
-  const [peekingDogs, setPeekingDogs] = useState(false);
-  const [skillFlash, setSkillFlash] = useState(null); // { type, color }
-  const [luckyShield, setLuckyShield] = useState(false); // one-hit damage nullifier
-  const [markedCatIdx, setMarkedCatIdx] = useState(-1); // cat cell highlighted by mark skill
-  const [barrierActive, setBarrierActive] = useState(false); // 3s full damage immunity
-  const [barrierRemaining, setBarrierRemaining] = useState(0); // countdown display
-  const [foreseeMode, setForeseeMode] = useState(0); // remaining foresee taps (0 = inactive)
-  const [foreseePreview, setForeseePreview] = useState(null); // { idx, type, label }
-  const [foreseeStartTime, setForeseeStartTime] = useState(0); // when current foresee session began
-  const [foreseeTimeOffset, setForeseeTimeOffset] = useState(0); // total ms spent in foresee mode this stage
-  const [crossSelecting, setCrossSelecting] = useState(false); // cross skill: waiting for player to pick center
-  const [crossStartTime, setCrossStartTime] = useState(0); // when cross selection began
-  const [crossEffect, setCrossEffect] = useState(null); // { centerIdx } — beam animation
-  const [isPerfect, setIsPerfect] = useState(false);
-  const [hintIdx, setHintIdx] = useState(-1);
-  const [hintPhase, setHintPhase] = useState("done"); // 'pulse' | 'reveal' | 'badge' | 'done'
+  const lapCount = useProgressStore(s => s.lapCount);
+  const setLapCount = useProgressStore(s => s.setLapCount);
+  const lapCats = useProgressStore(s => s.lapCats);
+  const setLapCats = useProgressStore(s => s.setLapCats);
+  const rouletteResult = useProgressStore(s => s.rouletteResult);
+  const setRouletteResult = useProgressStore(s => s.setRouletteResult);
+  const roulettePhase = useProgressStore(s => s.roulettePhase);
+  const setRoulettePhase = useProgressStore(s => s.setRoulettePhase);
+  const peekingDogs = useSkillStore(s => s.peekingDogs);
+  const setPeekingDogs = useSkillStore(s => s.setPeekingDogs);
+  const skillFlash = useSkillStore(s => s.skillFlash);
+  const setSkillFlash = useSkillStore(s => s.setSkillFlash);
+  const luckyShield = useSkillStore(s => s.luckyShield);
+  const setLuckyShield = useSkillStore(s => s.setLuckyShield);
+  const markedCatIdx = useSkillStore(s => s.markedCatIdx);
+  const setMarkedCatIdx = useSkillStore(s => s.setMarkedCatIdx);
+  const barrierActive = useSkillStore(s => s.barrierActive);
+  const setBarrierActive = useSkillStore(s => s.setBarrierActive);
+  const barrierRemaining = useSkillStore(s => s.barrierRemaining);
+  const setBarrierRemaining = useSkillStore(s => s.setBarrierRemaining);
+  const foreseeMode = useSkillStore(s => s.foreseeMode);
+  const setForeseeMode = useSkillStore(s => s.setForeseeMode);
+  const foreseePreview = useSkillStore(s => s.foreseePreview);
+  const setForeseePreview = useSkillStore(s => s.setForeseePreview);
+  const foreseeStartTime = useSkillStore(s => s.foreseeStartTime);
+  const setForeseeStartTime = useSkillStore(s => s.setForeseeStartTime);
+  const foreseeTimeOffset = useSkillStore(s => s.foreseeTimeOffset);
+  const setForeseeTimeOffset = useSkillStore(s => s.setForeseeTimeOffset);
+  const crossSelecting = useSkillStore(s => s.crossSelecting);
+  const setCrossSelecting = useSkillStore(s => s.setCrossSelecting);
+  const crossStartTime = useSkillStore(s => s.crossStartTime);
+  const setCrossStartTime = useSkillStore(s => s.setCrossStartTime);
+  const crossEffect = useEffectStore(s => s.crossEffect);
+  const setCrossEffect = useEffectStore(s => s.setCrossEffect);
+  const isPerfect = useGameStore(s => s.isPerfect);
+  const setIsPerfect = useGameStore(s => s.setIsPerfect);
+  const hintIdx = useGameStore(s => s.hintIdx);
+  const setHintIdx = useGameStore(s => s.setHintIdx);
+  const hintPhase = useGameStore(s => s.hintPhase);
+  const setHintPhase = useGameStore(s => s.setHintPhase);
 
   // Stage clear particles - regenerate per stage attempt
   const isWon = gameState === "won";
