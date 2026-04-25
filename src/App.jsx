@@ -8,9 +8,6 @@ import { SKILLS } from "./constants/skills";
 import { CAT_TYPES, INITIAL_UNLOCKED } from "./constants/cats";
 import { cellSize, ff } from "./constants/theme";
 import { createBoard, floodFill } from "./lib/board";
-import bgUrl from "./assets/main.png";
-import logoUrl from "./assets/title.png";
-import { KeyframeStyles } from "./components/effects/KeyframeStyles";
 import { DogAttack } from "./components/effects/DogAttack";
 import { CatRescue } from "./components/effects/CatRescue";
 import { CrossEffect } from "./components/effects/CrossEffect";
@@ -21,16 +18,16 @@ import { SkillFlash } from "./components/effects/SkillFlash";
 import { UnlockBanner } from "./components/effects/UnlockBanner";
 import { PawEffects } from "./components/effects/PawEffects";
 import { Toast } from "./components/effects/Toast";
-import { RulesModal } from "./components/modals/RulesModal";
 import { CollectionModal } from "./components/modals/CollectionModal";
+import { TitleScreen } from "./screens/TitleScreen";
+import { EncounterScreen } from "./screens/EncounterScreen";
+import { EndingScreen } from "./screens/EndingScreen";
 
 // ═══════════════════════════════════════════════════════════════
 // 🐱 にゃんこレスキュー — Cat Rescue Minesweeper (sprite version)
 // ═══════════════════════════════════════════════════════════════
 
 
-const BG_URL = bgUrl;
-const LOGO_URL = logoUrl;
 
 
 
@@ -781,587 +778,54 @@ export default function App() {
   // ─── Roulette Screen ────────────────────────────────────
   // ─── Encounter Screen (replaces roulette) ────────────────────
   if (screen === "roulette") {
-    const allCats = [...lapCats, ...rescued.map(c => c.key)];
-    const candidates = allCats.filter(key => !unlockedCats.includes(key));
-    const uniqueAll = [...new Set(allCats)].map(key => CAT_TYPES.find(c => c.key === key)).filter(Boolean);
-    const hasNewCat = candidates.length > 0;
-    const allUnlocked = unlockedCats.length >= CAT_TYPES.length;
-
-    // Auto-start encounter sequence on mount
-    const startEncounter = () => {
-      if (!hasNewCat) { setRoulettePhase("empty"); return; }
-      if (allUnlocked) { setRoulettePhase("complete"); return; }
-      setRoulettePhase("rustling");
-      // Pick weighted random from candidates
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      const cat = CAT_TYPES.find(c => c.key === pick);
-      setTimeout(() => {
-        setRouletteResult({ catKey: pick, catName: cat ? cat.name : pick });
-        setRoulettePhase("emerging");
-      }, 1800);
-      setTimeout(() => {
-        setRoulettePhase("revealed");
-        setUnlockedCats(prev => prev.includes(pick) ? prev : [...prev, pick]);
-      }, 2800);
-    };
-
-    const goToTitle = () => {
-      setLapCount(prev => prev + 1);
-      setLapCats([]);
-      setRoulettePhase("idle");
-      setRouletteResult(null);
-      setScreen("title");
-    };
-
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "linear-gradient(180deg, #ffcc80 0%, #ff8a65 30%, #5c6bc0 70%, #283593 100%)",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        fontFamily: ff, padding: "16px 16px 24px",
-        color: "#fff", position: "relative", overflow: "hidden",
-      }}>
-
-        {/* Header */}
-        <div style={{ textAlign: "center", marginTop: 30 }}>
-          <h2 style={{
-            fontSize: 24, fontWeight: 900, margin: 0,
-            textShadow: "0 3px 8px rgba(0,0,0,0.4)",
-            animation: "nameReveal 0.6s ease-out",
-          }}>
-            🌟 はいきょ クリア！ 🌟
-          </h2>
-          {lapCount > 0 && (
-            <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
-              〜 {lapCount + 1}周目 〜
-            </div>
-          )}
-        </div>
-
-        {/* Cats encountered */}
-        <div style={{
-          marginTop: 16, padding: "8px 16px",
-          background: "rgba(255,255,255,0.15)",
-          borderRadius: 16, maxWidth: 320, width: "100%",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, marginBottom: 6 }}>
-            今回出会った猫たち
-          </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
-            {uniqueAll.map((cat, i) => (
-              <div key={i} style={{
-                animation: `catsFadeIn 0.4s ease-out ${i * 0.15}s both`,
-              }}>
-                <Sprite name={cat.key} size={36} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Spacer */}
-        <div style={{ flex: 1, minHeight: 20 }} />
-
-        {/* Encounter area */}
-        <div style={{
-          position: "relative", width: "100%", maxWidth: 300,
-          height: 200, display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "flex-end",
-        }}>
-          {/* Soft glow behind cat */}
-          {(roulettePhase === "emerging" || roulettePhase === "revealed") && (
-            <div style={{
-              position: "absolute", left: "50%", top: "35%",
-              width: 200, height: 200, borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(255,253,200,0.9) 0%, rgba(255,236,179,0.5) 40%, transparent 70%)",
-              animation: "softGlow 1s ease-out forwards",
-              pointerEvents: "none",
-            }} />
-          )}
-
-          {/* Cat emerging from grass */}
-          <div style={{
-            position: "relative", zIndex: 2,
-            width: 100, height: 100,
-            overflow: "hidden",
-            marginBottom: -10,
-          }}>
-            {(roulettePhase === "emerging" || roulettePhase === "revealed") && rouletteResult && (
-              <div style={{
-                animation: "catEmerge 1s cubic-bezier(0.2, 0.8, 0.3, 1) forwards",
-              }}>
-                <Sprite name={rouletteResult.catKey} size={96} style={{ margin: "0 auto" }} />
-              </div>
-            )}
-            {roulettePhase === "rustling" && (
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: "100%", height: "100%",
-                fontSize: 32,
-                animation: "questionMark 0.6s ease-in-out infinite",
-              }}>❓</div>
-            )}
-          </div>
-
-          {/* Grass silhouette */}
-          <div style={{
-            position: "relative", zIndex: 3,
-            width: "100%", height: 40,
-            display: "flex", justifyContent: "center", gap: 0,
-            animation: roulettePhase === "rustling"
-              ? "grassIntense 0.5s ease-in-out infinite"
-              : "grassSway 2s ease-in-out infinite",
-          }}>
-            {Array.from({ length: 9 }, (_, i) => {
-              const h = 28 + (i % 3) * 8;
-              const hue = 110 + (i % 4) * 12;
-              return (
-                <div key={i} style={{
-                  width: 18, height: h,
-                  background: `hsl(${hue}, 55%, ${38 + (i % 3) * 8}%)`,
-                  borderRadius: "50% 50% 0 0",
-                  transform: `rotate(${(i - 4) * 6}deg)`,
-                  transformOrigin: "bottom center",
-                  marginTop: `${40 - h}px`,
-                }} />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Phase: idle — start button */}
-        {roulettePhase === "idle" && (
-          <div style={{ marginTop: 20, textAlign: "center" }}>
-            <div style={{
-              fontSize: 14, fontWeight: 700, marginBottom: 16,
-              textShadow: "0 2px 6px rgba(0,0,0,0.4)",
-            }}>
-              草むらに何かの気配が…
-            </div>
-            <button onClick={startEncounter} style={{
-              padding: "14px 40px",
-              background: "linear-gradient(135deg, #ff8a65, #ff5252)",
-              color: "#fff", border: "3px solid #fff", borderRadius: 40,
-              fontSize: 18, fontWeight: 900, cursor: "pointer",
-              boxShadow: "0 6px 0 #c62828, 0 8px 20px rgba(255,82,82,0.5)",
-              letterSpacing: 2,
-            }}>
-              🌿 のぞいてみる
-            </button>
-          </div>
-        )}
-
-        {/* Phase: rustling */}
-        {roulettePhase === "rustling" && (
-          <div style={{
-            marginTop: 20, fontSize: 15, fontWeight: 700, textAlign: "center",
-            textShadow: "0 2px 6px rgba(0,0,0,0.4)",
-            animation: "nameReveal 0.4s ease-out",
-          }}>
-            …？ だれかいるみたい…
-          </div>
-        )}
-
-        {/* Phase: emerging — cat coming out */}
-        {roulettePhase === "emerging" && (
-          <div style={{
-            marginTop: 20, fontSize: 15, fontWeight: 700, textAlign: "center",
-            textShadow: "0 2px 6px rgba(0,0,0,0.4)",
-            animation: "nameReveal 0.5s ease-out",
-          }}>
-            あっ…！
-          </div>
-        )}
-
-        {/* Phase: revealed — result */}
-        {roulettePhase === "revealed" && rouletteResult && (() => {
-          const cat = CAT_TYPES.find(c => c.key === rouletteResult.catKey);
-          const skill = cat ? SKILLS[cat.skill] : null;
-          return (
-            <div style={{
-              marginTop: 16, textAlign: "center",
-              animation: "nameReveal 0.5s ease-out",
-            }}>
-              <div style={{
-                fontSize: 22, fontWeight: 900, color: "#fff9c4",
-                textShadow: "0 2px 12px rgba(255,215,0,0.8), 0 4px 8px rgba(0,0,0,0.4)",
-                marginBottom: 4,
-              }}>
-                ✨ {rouletteResult.catName} ✨
-              </div>
-              <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 8 }}>
-                なかまになりたそうにこちらを見ている！
-              </div>
-              {skill && (
-                <div style={{
-                  display: "inline-block",
-                  background: skill.color, color: "#fff",
-                  padding: "4px 16px", borderRadius: 14,
-                  fontSize: 12, fontWeight: 800,
-                  boxShadow: `0 2px 8px ${skill.color}88`,
-                }}>
-                  {skill.icon} {skill.name}: {skill.desc}
-                </div>
-              )}
-              <div style={{ marginTop: 20 }}>
-                <button onClick={goToTitle} style={{
-                  padding: "14px 40px",
-                  background: "linear-gradient(135deg, #66bb6a, #43a047)",
-                  color: "#fff", border: "3px solid #fff", borderRadius: 40,
-                  fontSize: 16, fontWeight: 900, cursor: "pointer",
-                  boxShadow: "0 6px 0 #2e7d32, 0 8px 20px rgba(67,160,71,0.5)",
-                  letterSpacing: 2,
-                }}>
-                  🐾 なかまにする！
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Phase: empty — no new cat available */}
-        {roulettePhase === "empty" && (
-          <div style={{
-            marginTop: 20, textAlign: "center",
-            animation: "nameReveal 0.5s ease-out",
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
-              今回は新しい出会いはなかった…
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 20 }}>
-              でも猫たちはあなたを待っている！
-            </div>
-            <button onClick={goToTitle} style={{
-              padding: "12px 36px",
-              background: "rgba(255,255,255,0.2)", color: "#fff",
-              border: "2px solid rgba(255,255,255,0.6)", borderRadius: 24,
-              fontSize: 14, fontWeight: 700, cursor: "pointer",
-            }}>
-              次の周回へ ▶
-            </button>
-          </div>
-        )}
-
-        {/* Phase: complete — all cats unlocked */}
-        {roulettePhase === "complete" && (
-          <div style={{
-            marginTop: 20, textAlign: "center",
-            animation: "nameReveal 0.6s ease-out",
-          }}>
-            <div style={{
-              fontSize: 20, fontWeight: 900, color: "#ffd54f",
-              textShadow: "0 2px 10px rgba(255,215,0,0.8)",
-              marginBottom: 8,
-            }}>
-              🏆 全てのおともが集結！ 🏆
-            </div>
-            <div style={{
-              display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center",
-              marginBottom: 12,
-            }}>
-              {CAT_TYPES.map((cat, i) => (
-                <div key={i} style={{
-                  animation: `completeStar 1.5s ease-in-out ${i * 0.1}s infinite`,
-                }}>
-                  <Sprite name={cat.key} size={40} />
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 16 }}>
-              みんなの力であなたは最高のレスキュー隊長！
-            </div>
-            <button onClick={goToTitle} style={{
-              padding: "14px 40px",
-              background: "linear-gradient(135deg, #ffd54f, #ff8f00)",
-              color: "#fff", border: "3px solid #fff", borderRadius: 40,
-              fontSize: 16, fontWeight: 900, cursor: "pointer",
-              boxShadow: "0 6px 0 #e65100, 0 8px 20px rgba(255,143,0,0.5)",
-              letterSpacing: 2,
-            }}>
-              さらなる冒険へ ▶
-            </button>
-          </div>
-        )}
-      </div>
+      <EncounterScreen
+        lapCats={lapCats}
+        rescued={rescued}
+        unlockedCats={unlockedCats}
+        setUnlockedCats={setUnlockedCats}
+        rouletteResult={rouletteResult}
+        setRouletteResult={setRouletteResult}
+        roulettePhase={roulettePhase}
+        setRoulettePhase={setRoulettePhase}
+        lapCount={lapCount}
+        setLapCount={setLapCount}
+        setLapCats={setLapCats}
+        setScreen={setScreen}
+      />
     );
   }
-
   if (screen === "title") {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "linear-gradient(180deg, #b3e5fc 0%, #c8e6c9 60%, #dcedc8 100%)",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        fontFamily: ff, padding: "12px 12px 16px",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Main visual — fills available space, full image visible */}
-        <img src={BG_URL} alt="" aria-hidden="true" style={{
-          position: "absolute",
-          top: 0, left: "50%", transform: "translateX(-50%)",
-          width: "100%",
-          maxWidth: 600,
-          height: "auto",
-          maxHeight: "70vh",
-          objectFit: "contain",
-          objectPosition: "center top",
-          zIndex: 0,
-          pointerEvents: "none",
-        }} />
-
-        {/* Top icons */}
-        <div style={{ position: "absolute", top: 14, left: 14, zIndex: 5 }}>
-          <button onClick={() => setShowRules(!showRules)} style={{
-            width: 48, height: 48, borderRadius: "50%",
-            background: "rgba(255,255,255,0.85)",
-            border: "2px solid rgba(255,255,255,0.9)",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.2)",
-            cursor: "pointer", display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            fontSize: 18, fontWeight: 800, color: "#5a8a9e", padding: 0,
-          }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>?</span>
-            <span style={{ fontSize: 8, marginTop: 1 }}>ルール</span>
-          </button>
-        </div>
-        <div style={{ position: "absolute", top: 14, right: 14, zIndex: 5 }}>
-          <button onClick={() => setShowCollection(true)} style={{
-            width: 48, height: 48, borderRadius: "50%",
-            background: "rgba(255,255,255,0.85)",
-            border: "2px solid rgba(255,255,255,0.9)",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.2)",
-            cursor: "pointer", display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            fontSize: 11, color: "#5a8a9e", padding: 0, position: "relative",
-          }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>📖</span>
-            <span style={{ fontSize: 8, marginTop: 1 }}>図鑑</span>
-            {collection.length > 0 && (
-              <span style={{
-                position: "absolute", top: -2, right: -2,
-                background: "#ff5252", color: "#fff",
-                width: 14, height: 14, borderRadius: "50%",
-                fontSize: 9, fontWeight: 800,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>{collection.length}</span>
-            )}
-          </button>
-        </div>
-
-        {/* Title logo */}
-        <div style={{
-          marginTop: 0, marginBottom: 4, textAlign: "center",
-          animation: "shimmer 3s ease-in-out infinite",
-          position: "relative", zIndex: 2,
-        }}>
-          <img src={LOGO_URL} alt="にゃんこレスキュー" 
-            onClick={() => {
-              const n = logoTapCount + 1;
-              setLogoTapCount(n);
-              if (n >= 5) { setDebugMode(true); setLogoTapCount(0); }
-            }}
-            style={{
-            width: "min(68vw, 260px)",
-            height: "auto",
-            display: "block",
-            margin: "0 auto",
-            cursor: "pointer",
-            filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))",
-          }} />
-          {debugMode && (
-            <button onClick={() => {
-              setUnlockedCats(CAT_TYPES.map(c => c.key));
-              setCollection(CAT_TYPES.map(c => ({ ...c })));
-              setDebugMode(false);
-              setMessage("🛠 全猫コンプリート！");
-              setTimeout(() => setMessage(""), 2000);
-            }} style={{
-              marginTop: 8, padding: "6px 16px", fontSize: 11, fontWeight: 800,
-              background: "#424242", color: "#ffeb3b",
-              border: "2px dashed #ffeb3b", borderRadius: 12, cursor: "pointer",
-            }}>🛠 DEBUG: 全猫コンプ</button>
-          )}
-        </div>
-
-        {/* Spacer pushing UI to the bottom — preserves visual visibility */}
-        <div style={{ flex: 1, minHeight: 20 }} />
-
-        {/* Bottom UI container — overlay with subtle gradient to separate from visual */}
-        <div style={{
-          position: "relative", zIndex: 2,
-          width: "100%", maxWidth: 360,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.85) 100%)",
-          borderRadius: 20,
-          padding: "16px 8px 8px",
-          marginTop: -8,
-        }}>
-
-        {/* Companion selector */}
-        {(() => {
-          const cat = CAT_TYPES.find(c => c.key === companion) || CAT_TYPES[0];
-          const skill = SKILLS[cat.skill];
-          const unlockedList = CAT_TYPES.filter(c => unlockedCats.includes(c.key));
-          const currentIdx = unlockedList.findIndex(c => c.key === companion);
-          const cycle = (dir) => {
-            if (unlockedList.length <= 1) return;
-            const next = (currentIdx + dir + unlockedList.length) % unlockedList.length;
-            setCompanion(unlockedList[next].key);
-          };
-          return (
-            <div style={{
-              background: "rgba(255,253,245,0.95)",
-              borderRadius: 16, padding: "8px 10px",
-              border: "2px solid #fff",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-              marginBottom: 10, maxWidth: 340, width: "100%",
-              backdropFilter: "blur(4px)",
-            }}>
-              {lapCount > 0 && (
-                <div style={{
-                  fontSize: 10, fontWeight: 800, color: "#ff8f00",
-                  textAlign: "center", marginBottom: 2,
-                }}>
-                  🌟 {lapCount + 1}周目
-                </div>
-              )}
-              <div style={{
-                fontSize: 10, fontWeight: 800, color: "#888",
-                textAlign: "center", marginBottom: 4, letterSpacing: 1,
-              }}>
-                🐾 おともの ねこ ({unlockedCats.length} / {CAT_TYPES.length})
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button onClick={() => cycle(-1)} disabled={unlockedList.length <= 1} style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: unlockedList.length > 1 ? "#fff" : "#eee",
-                  border: "2px solid #ccc", cursor: unlockedList.length > 1 ? "pointer" : "default",
-                  fontSize: 14, fontWeight: 800, color: "#666", padding: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>◀</button>
-                <div style={{
-                  flex: 1, display: "flex", alignItems: "center", gap: 8,
-                  padding: "4px 8px",
-                  background: `linear-gradient(135deg, ${skill.color}22 0%, transparent 100%)`,
-                  borderRadius: 10,
-                }}>
-                  <Sprite name={cat.key} size={48} style={{ flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#37474f" }}>
-                      {cat.name} <span style={{ fontSize: 10, color: "#ffa726", marginLeft: 2 }}>{"★".repeat(cat.rarity)}</span>
-                    </div>
-                    <div style={{
-                      display: "inline-block", marginTop: 2,
-                      background: skill.color, color: "#fff",
-                      padding: "1px 8px", borderRadius: 10,
-                      fontSize: 10, fontWeight: 800,
-                    }}>
-                      {skill.icon} {skill.name}
-                    </div>
-                    <div style={{ fontSize: 9, color: "#666", marginTop: 2, lineHeight: 1.2 }}>
-                      {skill.desc}
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => cycle(1)} disabled={unlockedList.length <= 1} style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: unlockedList.length > 1 ? "#fff" : "#eee",
-                  border: "2px solid #ccc", cursor: unlockedList.length > 1 ? "pointer" : "default",
-                  fontSize: 14, fontWeight: 800, color: "#666", padding: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>▶</button>
-              </div>
-              {unlockedCats.length < CAT_TYPES.length && (
-                <div style={{
-                  textAlign: "center", marginTop: 4,
-                  fontSize: 9, color: "#aaa",
-                }}>
-                  🔒 あと {CAT_TYPES.length - unlockedCats.length} 匹のおとも候補が…
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* Start button */}
-        <button
-          onClick={() => { initStage(0); setScore(0); setCollection([]); setLapCats([]); setScreen("game"); }}
-          style={{
-            padding: "12px 0", fontSize: 20, fontWeight: 900,
-            background: "linear-gradient(180deg, #ff8a65 0%, #ff5252 100%)",
-            color: "#fff", border: "3px solid #fff", borderRadius: 50,
-            cursor: "pointer",
-            boxShadow: "0 6px 0 #c44, 0 8px 20px rgba(255,82,82,0.5)",
-            letterSpacing: 4, width: "100%", maxWidth: 300,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-            animation: "float 2.5s ease-in-out infinite",
-          }}
-        >
-          <span style={{ fontSize: 16 }}>🐾</span>
-          はじめる
-          <span style={{ fontSize: 16 }}>🐾</span>
-        </button>
-
-        {/* Footer note */}
-        <div style={{
-          marginTop: 10, fontSize: 12, fontWeight: 700, color: "#5a3a1a",
-          textAlign: "center",
-        }}>
-          ライフは<span style={{ color: "#e53935", fontSize: 16 }}>3つ</span>！全ての猫を保護してクリア！ ❤️
-        </div>
-        </div>{/* end bottom UI container */}
-
-        {/* Rules modal */}
-        <RulesModal open={showRules} onClose={() => setShowRules(false)} />
-
-        {/* Collection modal (shared with game screen) */}
-        <CollectionModal
-          open={showCollection}
-          onClose={() => setShowCollection(false)}
-          collection={collection}
-          backdropAlpha={0.5}
-          zIndex={200}
-          shadowAlpha={0.3}
-        />
-      </div>
+      <TitleScreen
+        showRules={showRules}
+        setShowRules={setShowRules}
+        showCollection={showCollection}
+        setShowCollection={setShowCollection}
+        collection={collection}
+        companion={companion}
+        setCompanion={setCompanion}
+        unlockedCats={unlockedCats}
+        setUnlockedCats={setUnlockedCats}
+        setCollection={setCollection}
+        lapCount={lapCount}
+        logoTapCount={logoTapCount}
+        setLogoTapCount={setLogoTapCount}
+        debugMode={debugMode}
+        setDebugMode={setDebugMode}
+        setMessage={setMessage}
+        onStart={() => { initStage(0); setScore(0); setCollection([]); setLapCats([]); setScreen("game"); }}
+      />
     );
   }
 
   if (screen === "ending") {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "linear-gradient(170deg, #e8f5e9 0%, #fff8e1 50%, #fce4ec 100%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        fontFamily: ff, padding: 20,
-      }}>
-        <div style={{ fontSize: 56, marginBottom: 8 }}>🎊</div>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: "#e65100", marginBottom: 8 }}>全ステージクリア！</h1>
-        <p style={{ fontSize: 20, fontWeight: 700, color: "#43a047", marginBottom: 12 }}>スコア: {score}</p>
-        <p style={{ color: "#666", marginBottom: 8 }}>コレクション: {collection.length} / {CAT_TYPES.length} 種</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 20, maxWidth: 360 }}>
-          {collection.map((c, i) => (
-            <div key={i} style={{
-              background: "#fff", borderRadius: 12, padding: "8px 10px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)", textAlign: "center", fontSize: 11,
-            }}>
-              <Sprite name={c.key} size={48} style={{ margin: "0 auto" }} />
-              <div style={{ fontWeight: 700, marginTop: 2 }}>{c.name}</div>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={() => setScreen("title")}
-          style={{
-            padding: "12px 36px", fontSize: 16, fontWeight: 700,
-            background: "linear-gradient(135deg, #ff8a65, #ff5252)",
-            color: "#fff", border: "none", borderRadius: 50, cursor: "pointer",
-          }}
-        >タイトルへ</button>
-      </div>
+      <EndingScreen
+        score={score}
+        collection={collection}
+        onTitle={() => setScreen("title")}
+      />
     );
   }
 
