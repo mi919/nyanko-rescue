@@ -7,12 +7,12 @@ type SkillFlashProps = { flash: SkillFlashData | null };
 export function SkillFlash({ flash }: SkillFlashProps) {
   if (!flash) return null;
   return (
-    <div style={{
-      position: "fixed", top: "50%", left: "50%",
-      width: 200, height: 200, borderRadius: "50%",
-      background: `radial-gradient(circle, ${flash.color}cc 0%, ${flash.color}66 40%, transparent 70%)`,
-      pointerEvents: "none", zIndex: 240,
-      animation: "skillFlash 0.6s ease-out forwards",
-    }} />
+    <div
+      className="fixed top-1/2 left-1/2 w-[200px] h-[200px] rounded-full pointer-events-none z-[240]"
+      style={{
+        background: `radial-gradient(circle, ${flash.color}cc 0%, ${flash.color}66 40%, transparent 70%)`,
+        animation: "skillFlash 0.6s ease-out forwards",
+      }}
+    />
   );
 }

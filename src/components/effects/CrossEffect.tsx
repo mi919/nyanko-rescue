@@ -31,62 +31,69 @@ export function CrossEffect({ effect, boardRef, cols }: CrossEffectProps) {
   const beamLength = (cellSize + gap) * 5;
   const beamThickness = cellSize - 4;
   return (
-    <div key={effect.key} style={{
-      position: "fixed", left: cx, top: cy,
-      width: 0, height: 0, pointerEvents: "none", zIndex: 240,
-    }}>
+    <div
+      key={effect.key}
+      className="fixed w-0 h-0 pointer-events-none z-[240]"
+      style={{ left: cx, top: cy }}
+    >
       {/* Soft outer glow halo */}
-      <div style={{
-        position: "absolute", left: 0, top: 0,
-        width: 240, height: 240,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(255,255,220,0.7) 0%, rgba(255,236,179,0.4) 25%, rgba(255,213,79,0.15) 50%, transparent 75%)",
-        transform: "translate(-50%,-50%)",
-        animation: "crossHalo 0.7s ease-out forwards",
-        filter: "blur(2px)",
-      }} />
+      <div
+        className="absolute left-0 top-0 w-[240px] h-[240px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(255,255,220,0.7) 0%, rgba(255,236,179,0.4) 25%, rgba(255,213,79,0.15) 50%, transparent 75%)",
+          transform: "translate(-50%,-50%)",
+          animation: "crossHalo 0.7s ease-out forwards",
+          filter: "blur(2px)",
+        }}
+      />
       {/* Vertical light beam */}
-      <div style={{
-        position: "absolute",
-        left: -beamThickness / 2, top: -beamLength / 2,
-        width: beamThickness, height: beamLength,
-        background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,200,1) 50%, rgba(255,255,255,0.85) 70%, transparent 100%)",
-        borderRadius: beamThickness / 2,
-        animation: "crossBeamV 0.6s ease-out forwards",
-        boxShadow: "0 0 30px rgba(255,236,150,0.95), 0 0 60px rgba(255,213,79,0.6)",
-        filter: "blur(0.5px)",
-      }} />
+      <div
+        className="absolute"
+        style={{
+          left: -beamThickness / 2, top: -beamLength / 2,
+          width: beamThickness, height: beamLength,
+          background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,200,1) 50%, rgba(255,255,255,0.85) 70%, transparent 100%)",
+          borderRadius: beamThickness / 2,
+          animation: "crossBeamV 0.6s ease-out forwards",
+          boxShadow: "0 0 30px rgba(255,236,150,0.95), 0 0 60px rgba(255,213,79,0.6)",
+          filter: "blur(0.5px)",
+        }}
+      />
       {/* Horizontal light beam */}
-      <div style={{
-        position: "absolute",
-        left: -beamLength / 2, top: -beamThickness / 2,
-        width: beamLength, height: beamThickness,
-        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,200,1) 50%, rgba(255,255,255,0.85) 70%, transparent 100%)",
-        borderRadius: beamThickness / 2,
-        animation: "crossBeamH 0.6s ease-out forwards",
-        boxShadow: "0 0 30px rgba(255,236,150,0.95), 0 0 60px rgba(255,213,79,0.6)",
-        filter: "blur(0.5px)",
-      }} />
+      <div
+        className="absolute"
+        style={{
+          left: -beamLength / 2, top: -beamThickness / 2,
+          width: beamLength, height: beamThickness,
+          background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 30%, rgba(255,255,200,1) 50%, rgba(255,255,255,0.85) 70%, transparent 100%)",
+          borderRadius: beamThickness / 2,
+          animation: "crossBeamH 0.6s ease-out forwards",
+          boxShadow: "0 0 30px rgba(255,236,150,0.95), 0 0 60px rgba(255,213,79,0.6)",
+          filter: "blur(0.5px)",
+        }}
+      />
       {/* Center bright core */}
-      <div style={{
-        position: "absolute", left: 0, top: 0,
-        width: 80, height: 80,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,253,200,0.9) 30%, rgba(255,213,79,0.4) 60%, transparent 80%)",
-        transform: "translate(-50%,-50%)",
-        animation: "crossCore 0.6s ease-out forwards",
-        boxShadow: "0 0 40px rgba(255,255,200,1)",
-      }} />
+      <div
+        className="absolute left-0 top-0 w-[80px] h-[80px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,253,200,0.9) 30%, rgba(255,213,79,0.4) 60%, transparent 80%)",
+          transform: "translate(-50%,-50%)",
+          animation: "crossCore 0.6s ease-out forwards",
+          boxShadow: "0 0 40px rgba(255,255,200,1)",
+        }}
+      />
       {/* Sparkle stars in 8 directions */}
       {sparkleStars.map((p, i) => (
-        <div key={i} style={{
-          position: "absolute", left: 0, top: 0,
-          fontSize: 16, lineHeight: 1,
-          "--dx": `${p.dx}px`,
-          "--dy": `${p.dy}px`,
-          animation: `sparkleFly 0.6s ease-out ${p.delay}s forwards`,
-          filter: "drop-shadow(0 0 4px rgba(255,255,200,0.9))",
-        } as CSSProperties}>✨</div>
+        <div
+          key={i}
+          className="absolute left-0 top-0 text-base leading-none"
+          style={{
+            "--dx": `${p.dx}px`,
+            "--dy": `${p.dy}px`,
+            animation: `sparkleFly 0.6s ease-out ${p.delay}s forwards`,
+            filter: "drop-shadow(0 0 4px rgba(255,255,200,0.9))",
+          } as CSSProperties}
+        >✨</div>
       ))}
     </div>
   );

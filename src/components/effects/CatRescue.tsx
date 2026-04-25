@@ -66,35 +66,37 @@ export function CatRescue({ data }: CatRescueProps) {
   if (!data) return null;
   const v = data.variant || 0;
   return (
-    <div style={{
-      position: "fixed", left: data.x, top: data.y,
-      width: 0, height: 0, zIndex: 250, pointerEvents: "none",
-    }}>
+    <div
+      className="fixed w-0 h-0 z-[250] pointer-events-none"
+      style={{ left: data.x, top: data.y }}
+    >
       {/* Light ring */}
-      <div style={{
-        position: "absolute", left: 0, top: 0,
-        width: 80, height: 80, marginLeft: -40, marginTop: -40,
-        borderRadius: "50%",
-        background: ringStyles[v],
-        animation: "ringExpand 0.6s ease-out forwards",
-      }} />
+      <div
+        className="absolute left-0 top-0 w-20 h-20 -ml-10 -mt-10 rounded-full"
+        style={{
+          background: ringStyles[v],
+          animation: "ringExpand 0.6s ease-out forwards",
+        }}
+      />
       {/* Cat sprite */}
-      <div style={{
-        position: "absolute", left: 0, top: 0,
-        animation: catAnims[v],
-      }}>
+      <div
+        className="absolute left-0 top-0"
+        style={{ animation: catAnims[v] }}
+      >
         <Sprite name={data.catKey} size={64} />
       </div>
       {/* Particles */}
       {particleSets[v].map((p, i) => (
-        <div key={i} style={{
-          position: "absolute", left: 0, top: 0,
-          fontSize: 22,
-          "--dx": `${p.dx}px`,
-          "--dy": `${p.dy}px`,
-          "--start-y": `${p.startY || 0}px`,
-          animation: `${p.anim} 0.7s ease-out ${p.delay}s forwards`,
-        } as CSSProperties}>
+        <div
+          key={i}
+          className="absolute left-0 top-0 text-[22px]"
+          style={{
+            "--dx": `${p.dx}px`,
+            "--dy": `${p.dy}px`,
+            "--start-y": `${p.startY || 0}px`,
+            animation: `${p.anim} 0.7s ease-out ${p.delay}s forwards`,
+          } as CSSProperties}
+        >
           {p.emoji}
         </div>
       ))}
