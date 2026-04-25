@@ -243,16 +243,18 @@ if (gameState !== "playing" || dogAttack) return;
 
 ---
 
-## 7. 将来の永続化対象
+## 7. 永続化（localStorage）
 
-以下のstateはlocalStorage等で永続化すべき候補。
+v2.2 以降、以下の state は `useLocalStorageState` フックを通じて `localStorage` に永続化される。
 
-| state | 優先度 | 理由 |
-|-------|--------|------|
-| `unlockedCats` | 高 | 周回プレイの進行記録 |
-| `stageBest` | 高 | ベストスコア |
-| `lapCount` | 中 | 周回数 |
-| `companion` | 低 | 前回選択の記憶 |
+| state | キー | 初期値 |
+|-------|------|--------|
+| `unlockedCats` | `nyanko_unlockedCats` | `INITIAL_UNLOCKED`（`["chatora"]`） |
+| `stageBest` | `nyanko_stageBest` | `{}` |
+| `lapCount` | `nyanko_lapCount` | `0` |
+| `companion` | `nyanko_companion` | `"chatora"` |
+
+`useLocalStorageState(key, initial)` は `useState` 互換のシグネチャを持ち、初回マウント時に `localStorage` から復元、値変更時に書き戻す。SSR 等で `window` が無い環境では `initial` を返してフォールバックする。
 
 ---
 
