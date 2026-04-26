@@ -22,14 +22,14 @@ type SkillState = {
   setSkillGauge: (v: number | ((prev: number) => number)) => void;
   setPeekingDogs: (v: boolean) => void;
   setLuckyShield: (v: boolean) => void;
-  setMarkedCatIdx: (v: number) => void;
+  setMarkedCatIdx: (v: number | ((prev: number) => number)) => void;
   setBarrierActive: (v: boolean) => void;
   setBarrierRemaining: (v: number | ((prev: number) => number)) => void;
   setForeseeMode: (v: number | ((prev: number) => number)) => void;
   setForeseePreview: (v: ForeseePreview) => void;
   setForeseeStartTime: (v: number) => void;
   setForeseeTimeOffset: (v: number | ((prev: number) => number)) => void;
-  setCrossSelecting: (v: boolean) => void;
+  setCrossSelecting: (v: boolean | ((prev: boolean) => boolean)) => void;
   setCrossStartTime: (v: number) => void;
   setSkillFlash: (v: SkillFlashData | null) => void;
   setSkillUsedThisStage: (v: boolean) => void;
@@ -57,14 +57,14 @@ export const useSkillStore = create<SkillState>((set) => ({
   setSkillGauge: (v) => set((s) => ({ skillGauge: updater(s.skillGauge, v) })),
   setPeekingDogs: (v) => set({ peekingDogs: v }),
   setLuckyShield: (v) => set({ luckyShield: v }),
-  setMarkedCatIdx: (v) => set({ markedCatIdx: v }),
+  setMarkedCatIdx: (v) => set((s) => ({ markedCatIdx: updater(s.markedCatIdx, v) })),
   setBarrierActive: (v) => set({ barrierActive: v }),
   setBarrierRemaining: (v) => set((s) => ({ barrierRemaining: updater(s.barrierRemaining, v) })),
   setForeseeMode: (v) => set((s) => ({ foreseeMode: updater(s.foreseeMode, v) })),
   setForeseePreview: (v) => set({ foreseePreview: v }),
   setForeseeStartTime: (v) => set({ foreseeStartTime: v }),
   setForeseeTimeOffset: (v) => set((s) => ({ foreseeTimeOffset: updater(s.foreseeTimeOffset, v) })),
-  setCrossSelecting: (v) => set({ crossSelecting: v }),
+  setCrossSelecting: (v) => set((s) => ({ crossSelecting: updater(s.crossSelecting, v) })),
   setCrossStartTime: (v) => set({ crossStartTime: v }),
   setSkillFlash: (v) => set({ skillFlash: v }),
   setSkillUsedThisStage: (v) => set({ skillUsedThisStage: v }),

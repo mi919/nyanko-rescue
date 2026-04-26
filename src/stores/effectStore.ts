@@ -13,7 +13,7 @@ type EffectState = {
   crossEffect: CrossEffectData | null;
 
   setDogAttack: (v: boolean) => void;
-  setCatRescue: (v: CatRescueData | null) => void;
+  setCatRescue: (v: CatRescueData | null | ((prev: CatRescueData | null) => CatRescueData | null)) => void;
   setPawEffects: (v: PawEffect[] | ((prev: PawEffect[]) => PawEffect[])) => void;
   setUnlockBanner: (v: UnlockBannerData | null) => void;
   setCrossEffect: (v: CrossEffectData | null) => void;
@@ -33,7 +33,7 @@ export const useEffectStore = create<EffectState>((set) => ({
   crossEffect: null,
 
   setDogAttack: (v) => set({ dogAttack: v }),
-  setCatRescue: (v) => set({ catRescue: v }),
+  setCatRescue: (v) => set((s) => ({ catRescue: updater(s.catRescue, v) })),
   setPawEffects: (v) => set((s) => ({ pawEffects: updater(s.pawEffects, v) })),
   setUnlockBanner: (v) => set({ unlockBanner: v }),
   setCrossEffect: (v) => set({ crossEffect: v }),

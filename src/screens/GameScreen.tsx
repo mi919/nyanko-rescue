@@ -1,31 +1,29 @@
-import { useCallback, useEffect, useRef, useMemo } from "react";
-import { Sprite } from "./components/Sprite";
-import { Cell } from "./components/Cell";
-import { STAGES } from "./constants/stages";
-import { SCORING } from "./constants/scoring";
-import { SKILLS } from "./constants/skills";
-import { CAT_TYPES } from "./constants/cats";
-import { cellSize, ff } from "./constants/theme";
-import { createBoard, floodFill } from "./lib/board";
-import { DogAttack } from "./components/effects/DogAttack";
-import { CatRescue } from "./components/effects/CatRescue";
-import { CrossEffect } from "./components/effects/CrossEffect";
-import { StageClearOverlay } from "./components/effects/StageClearOverlay";
-import { PerfectFireworks } from "./components/effects/PerfectFireworks";
-import { GameOverOverlay } from "./components/effects/GameOverOverlay";
-import { SkillFlash } from "./components/effects/SkillFlash";
-import { UnlockBanner } from "./components/effects/UnlockBanner";
-import { PawEffects } from "./components/effects/PawEffects";
-import { Toast } from "./components/effects/Toast";
-import { CollectionModal } from "./components/modals/CollectionModal";
-import { TitleScreen } from "./screens/TitleScreen";
-import { EncounterScreen } from "./screens/EncounterScreen";
-import { EndingScreen } from "./screens/EndingScreen";
-import { useUiStore } from "./stores/uiStore";
-import { useGameStore } from "./stores/gameStore";
-import { useSkillStore } from "./stores/skillStore";
-import { useProgressStore } from "./stores/progressStore";
-import { useEffectStore } from "./stores/effectStore";
+import { useCallback, useEffect, useRef, useMemo, type CSSProperties } from "react";
+import { Sprite } from "../components/Sprite";
+import { Cell } from "../components/Cell";
+import { STAGES } from "../constants/stages";
+import { SCORING } from "../constants/scoring";
+import { SKILLS } from "../constants/skills";
+import { CAT_TYPES } from "../constants/cats";
+import { cellSize, ff } from "../constants/theme";
+import { createBoard, floodFill } from "../lib/board";
+import { DogAttack } from "../components/effects/DogAttack";
+import { CatRescue } from "../components/effects/CatRescue";
+import { CrossEffect } from "../components/effects/CrossEffect";
+import { StageClearOverlay } from "../components/effects/StageClearOverlay";
+import { PerfectFireworks } from "../components/effects/PerfectFireworks";
+import { GameOverOverlay } from "../components/effects/GameOverOverlay";
+import { SkillFlash } from "../components/effects/SkillFlash";
+import { UnlockBanner } from "../components/effects/UnlockBanner";
+import { PawEffects } from "../components/effects/PawEffects";
+import { Toast } from "../components/effects/Toast";
+import { CollectionModal } from "../components/modals/CollectionModal";
+import { useInitStage } from "../hooks/useInitStage";
+import { useUiStore } from "../stores/uiStore";
+import { useGameStore } from "../stores/gameStore";
+import { useSkillStore } from "../stores/skillStore";
+import { useProgressStore } from "../stores/progressStore";
+import { useEffectStore } from "../stores/effectStore";
 
 // ═══════════════════════════════════════════════════════════════
 // 🐱 にゃんこレスキュー — Cat Rescue Minesweeper (sprite version)
@@ -41,7 +39,7 @@ import { useEffectStore } from "./stores/effectStore";
 
 
 
-export default function App() {
+export function GameScreen() {
   const stageIdx = useGameStore(s => s.stageIdx);
   const setStageIdx = useGameStore(s => s.setStageIdx);
   const board = useGameStore(s => s.board);
@@ -87,9 +85,9 @@ export default function App() {
   const setDebugMode = useUiStore(s => s.setDebugMode);
   const pawEffects = useEffectStore(s => s.pawEffects);
   const setPawEffects = useEffectStore(s => s.setPawEffects);
-  const boardRef = useRef(null);
+  const boardRef = useRef<HTMLDivElement>(null);
 
-  const triggerPawEffects = (indices, options = {}) => {
+  const triggerPawEffects = (indices: number[], options: { stagger?: number; big?: boolean } = {}) => {
     if (!boardRef.current) return;
     const rect = boardRef.current.getBoundingClientRect();
     const padding = 8; // matches board padding
@@ -223,65 +221,7 @@ export default function App() {
     hintTimeoutsRef.current = [];
   };
 
-  const lapCountRef = useRef(0);
-  lapCountRef.current = lapCount;
-
-  const initStage = useCallback((idx) => {
-    const s = STAGES[idx];
-    const extra = lapCountRef.current; // lap difficulty: +N dogs per lap
-    const maxDogs = Math.floor(s.rows * s.cols * 0.3);
-    const effectiveDogs = Math.min(s.dogs + extra, maxDogs);
-    const { board: newBoard, hintIdx: newHintIdx } = createBoard(s.rows, s.cols, effectiveDogs, s.cats, idx);
-    setBoard(newBoard);
-    setLives(3); setRescued([]); setGameState("playing"); setMessage(""); setStageIdx(idx);
-    setCatRescueCount(0);
-    setCellsOpened(0);
-    setManualNumberCells(0);
-    setStageStartTime(Date.now());
-    setSkillUsedThisStage(false);
-    setHitDogThisStage(false);
-    setScoreBreakdown(null);
-    setIsNewBest(false);
-    setAnimatedTotal(0);
-    setIsPerfect(false);
-    setHintIdx(newHintIdx);
-    setSkillGauge(0);
-    setPeekingDogs(false);
-    setLuckyShield(false);
-    setMarkedCatIdx(-1);
-    setBarrierActive(false);
-    setBarrierRemaining(0);
-    setForeseeMode(0);
-    setForeseePreview(null);
-    setForeseeStartTime(0);
-    setForeseeTimeOffset(0);
-    setCrossSelecting(false);
-    setCrossStartTime(0);
-    setCrossEffect(null);
-    clearHintTimeouts();
-    if (newHintIdx >= 0) {
-      setHintPhase("converge");
-      // After particles converge, flash and reveal
-      hintTimeoutsRef.current.push(setTimeout(() => {
-        setBoard(prev => {
-          const updated = prev.map(c => ({ ...c }));
-          if (updated[newHintIdx]) updated[newHintIdx].revealed = true;
-          return updated;
-        });
-        setHintPhase("flash");
-      }, 500));
-      // Show badge
-      hintTimeoutsRef.current.push(setTimeout(() => {
-        setHintPhase("badge");
-      }, 575));
-      // Done
-      hintTimeoutsRef.current.push(setTimeout(() => {
-        setHintPhase("done");
-      }, 750));
-    } else {
-      setHintPhase("done");
-    }
-  }, []);
+  const initStage = useInitStage();
 
   // Skip hint animation when user taps anywhere during the hint
   const skipHint = useCallback(() => {
@@ -297,7 +237,6 @@ export default function App() {
     setHintPhase("done");
   }, [hintPhase, hintIdx]);
 
-  useEffect(() => { initStage(0); }, [initStage]);
 
   const finalizeStageScore = (finalBoard) => {
     // Subtract time spent in foresee/cross selection mode (selection time should not count toward clear time)
@@ -832,57 +771,7 @@ export default function App() {
 
   // ─── Roulette Screen ────────────────────────────────────
   // ─── Encounter Screen (replaces roulette) ────────────────────
-  if (screen === "roulette") {
-    return (
-      <EncounterScreen
-        lapCats={lapCats}
-        rescued={rescued}
-        unlockedCats={unlockedCats}
-        setUnlockedCats={setUnlockedCats}
-        rouletteResult={rouletteResult}
-        setRouletteResult={setRouletteResult}
-        roulettePhase={roulettePhase}
-        setRoulettePhase={setRoulettePhase}
-        lapCount={lapCount}
-        setLapCount={setLapCount}
-        setLapCats={setLapCats}
-        setScreen={setScreen}
-      />
-    );
-  }
-  if (screen === "title") {
-    return (
-      <TitleScreen
-        showRules={showRules}
-        setShowRules={setShowRules}
-        showCollection={showCollection}
-        setShowCollection={setShowCollection}
-        collection={collection}
-        companion={companion}
-        setCompanion={setCompanion}
-        unlockedCats={unlockedCats}
-        setUnlockedCats={setUnlockedCats}
-        setCollection={setCollection}
-        lapCount={lapCount}
-        logoTapCount={logoTapCount}
-        setLogoTapCount={setLogoTapCount}
-        debugMode={debugMode}
-        setDebugMode={setDebugMode}
-        setMessage={setMessage}
-        onStart={() => { initStage(0); setScore(0); setCollection([]); setLapCats([]); setScreen("game"); }}
-      />
-    );
-  }
 
-  if (screen === "ending") {
-    return (
-      <EndingScreen
-        score={score}
-        collection={collection}
-        onTitle={() => setScreen("title")}
-      />
-    );
-  }
 
   return (
     <div style={{
@@ -1118,7 +1007,7 @@ export default function App() {
                   "--start-y": `${p.startY}px`,
                   animation: `hintParticleConverge 0.48s cubic-bezier(0.4, 0, 0.7, 1) ${p.delay}s forwards`,
                   filter: "drop-shadow(0 0 6px #fff59d) drop-shadow(0 0 10px #ffd54f)",
-                }}>{p.emoji}</div>
+                } as CSSProperties}>{p.emoji}</div>
               ))}
               {/* Burst flash at center */}
               {(hintPhase === "flash" || hintPhase === "badge") && (
