@@ -1,14 +1,14 @@
 import { Sprite } from "../components/Sprite";
 import { CAT_TYPES } from "../constants/cats";
-import type { CatType } from "../types/cat";
+import { useGameStore } from "../stores/gameStore";
+import { useProgressStore } from "../stores/progressStore";
+import { useUiStore } from "../stores/uiStore";
 
-type EndingScreenProps = {
-  score: number;
-  collection: readonly CatType[];
-  onTitle: () => void;
-};
+export function EndingScreen() {
+  const score = useGameStore((s) => s.score);
+  const collection = useProgressStore((s) => s.collection);
+  const setScreen = useUiStore((s) => s.setScreen);
 
-export function EndingScreen({ score, collection, onTitle }: EndingScreenProps) {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center font-jp p-5"
@@ -30,7 +30,7 @@ export function EndingScreen({ score, collection, onTitle }: EndingScreenProps) 
         ))}
       </div>
       <button
-        onClick={onTitle}
+        onClick={() => setScreen("title")}
         className="px-9 py-3 text-base font-bold text-white border-0 rounded-full cursor-pointer"
         style={{ background: "linear-gradient(135deg, #ff8a65, #ff5252)" }}
       >

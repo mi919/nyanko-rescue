@@ -5,12 +5,15 @@ import type { CatType } from "../types/cat";
 export type GameStateValue = "playing" | "won" | "lost";
 export type HintPhase = "converge" | "flash" | "badge" | "done";
 
-export type ScoreItem = { label: string; value: number };
+export type ScoreItem = { label: string; value: number; highlight?: boolean };
 export type ScoreBreakdown = {
   items: ScoreItem[];
   subtotal: number;
-  multiplier: number;
+  mult: number;
   total: number;
+  prevBest: number;
+  stageName: string;
+  elapsed: number;
 };
 
 type GameState = {

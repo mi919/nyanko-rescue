@@ -1,45 +1,29 @@
-import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { Sprite } from "../components/Sprite";
 import { CAT_TYPES } from "../constants/cats";
 import { SKILLS } from "../constants/skills";
-import type { CatKey, CatType } from "../types/cat";
+import type { CatType } from "../types/cat";
+import { useGameStore } from "../stores/gameStore";
+import { useProgressStore } from "../stores/progressStore";
+import { useUiStore } from "../stores/uiStore";
 
-export type RoulettePhase = "idle" | "rustling" | "emerging" | "revealed" | "empty" | "complete";
-export type RouletteResult = { catKey: CatKey; catName: string };
+export function EncounterScreen() {
+  const rescued = useGameStore((s) => s.rescued);
+  const lapCats = useProgressStore((s) => s.lapCats);
+  const unlockedCats = useProgressStore((s) => s.unlockedCats);
+  const setUnlockedCats = useProgressStore((s) => s.setUnlockedCats);
+  const rouletteResult = useProgressStore((s) => s.rouletteResult);
+  const setRouletteResult = useProgressStore((s) => s.setRouletteResult);
+  const roulettePhase = useProgressStore((s) => s.roulettePhase);
+  const setRoulettePhase = useProgressStore((s) => s.setRoulettePhase);
+  const lapCount = useProgressStore((s) => s.lapCount);
+  const setLapCount = useProgressStore((s) => s.setLapCount);
+  const setLapCats = useProgressStore((s) => s.setLapCats);
+  const setScreen = useUiStore((s) => s.setScreen);
 
-type EncounterScreenProps = {
-  lapCats: readonly CatKey[];
-  rescued: readonly CatType[];
-  unlockedCats: readonly CatKey[];
-  setUnlockedCats: Dispatch<SetStateAction<readonly CatKey[]>>;
-  rouletteResult: RouletteResult | null;
-  setRouletteResult: Dispatch<SetStateAction<RouletteResult | null>>;
-  roulettePhase: RoulettePhase;
-  setRoulettePhase: Dispatch<SetStateAction<RoulettePhase>>;
-  lapCount: number;
-  setLapCount: Dispatch<SetStateAction<number>>;
-  setLapCats: Dispatch<SetStateAction<readonly CatKey[]>>;
-  setScreen: Dispatch<SetStateAction<string>>;
-};
-
-export function EncounterScreen({
-  lapCats,
-  rescued,
-  unlockedCats,
-  setUnlockedCats,
-  rouletteResult,
-  setRouletteResult,
-  roulettePhase,
-  setRoulettePhase,
-  lapCount,
-  setLapCount,
-  setLapCats,
-  setScreen,
-}: EncounterScreenProps) {
-  const allCats = [...lapCats, ...rescued.map(c => c.key)];
-  const candidates = allCats.filter(key => !unlockedCats.includes(key));
+  const allCats = [...lapCats, ...rescued.map((c) => c.key)];
+  const candidates = allCats.filter((key) => !unlockedCats.includes(key));
   const uniqueAll = [...new Set(allCats)]
-    .map(key => CAT_TYPES.find(c => c.key === key))
+    .map((key) => CAT_TYPES.find((c) => c.key === key))
     .filter((c): c is CatType => Boolean(c));
   const hasNewCat = candidates.length > 0;
   const allUnlocked = unlockedCats.length >= CAT_TYPES.length;
@@ -49,19 +33,19 @@ export function EncounterScreen({
     if (allUnlocked) { setRoulettePhase("complete"); return; }
     setRoulettePhase("rustling");
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    const cat = CAT_TYPES.find(c => c.key === pick);
+    const cat = CAT_TYPES.find((c) => c.key === pick);
     setTimeout(() => {
       setRouletteResult({ catKey: pick, catName: cat ? cat.name : pick });
       setRoulettePhase("emerging");
     }, 1800);
     setTimeout(() => {
       setRoulettePhase("revealed");
-      setUnlockedCats(prev => prev.includes(pick) ? prev : [...prev, pick]);
+      setUnlockedCats((prev) => prev.includes(pick) ? prev : [...prev, pick]);
     }, 2800);
   };
 
   const goToTitle = () => {
-    setLapCount(prev => prev + 1);
+    setLapCount((prev) => prev + 1);
     setLapCats([]);
     setRoulettePhase("idle");
     setRouletteResult(null);
@@ -212,7 +196,7 @@ export function EncounterScreen({
 
       {/* Phase: revealed */}
       {roulettePhase === "revealed" && rouletteResult && (() => {
-        const cat = CAT_TYPES.find(c => c.key === rouletteResult.catKey);
+        const cat = CAT_TYPES.find((c) => c.key === rouletteResult.catKey);
         const skill = cat ? SKILLS[cat.skill] : null;
         return (
           <div

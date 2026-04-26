@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from "react";
 import bgUrl from "../assets/main.png";
 import logoUrl from "../assets/title.png";
 import { Sprite } from "../components/Sprite";
@@ -6,55 +5,51 @@ import { RulesModal } from "../components/modals/RulesModal";
 import { CollectionModal } from "../components/modals/CollectionModal";
 import { CAT_TYPES } from "../constants/cats";
 import { SKILLS } from "../constants/skills";
-import type { CatKey, CatType } from "../types/cat";
+import { useGameStore } from "../stores/gameStore";
+import { useProgressStore } from "../stores/progressStore";
+import { useUiStore } from "../stores/uiStore";
+import { useInitStage } from "../hooks/useInitStage";
 
-type TitleScreenProps = {
-  showRules: boolean;
-  setShowRules: Dispatch<SetStateAction<boolean>>;
-  showCollection: boolean;
-  setShowCollection: Dispatch<SetStateAction<boolean>>;
-  collection: readonly CatType[];
-  companion: CatKey;
-  setCompanion: Dispatch<SetStateAction<CatKey>>;
-  unlockedCats: readonly CatKey[];
-  setUnlockedCats: Dispatch<SetStateAction<readonly CatKey[]>>;
-  setCollection: Dispatch<SetStateAction<CatType[]>>;
-  lapCount: number;
-  logoTapCount: number;
-  setLogoTapCount: Dispatch<SetStateAction<number>>;
-  debugMode: boolean;
-  setDebugMode: Dispatch<SetStateAction<boolean>>;
-  setMessage: Dispatch<SetStateAction<string>>;
-  onStart: () => void;
-};
+export function TitleScreen() {
+  const showRules = useUiStore((s) => s.showRules);
+  const setShowRules = useUiStore((s) => s.setShowRules);
+  const showCollection = useUiStore((s) => s.showCollection);
+  const setShowCollection = useUiStore((s) => s.setShowCollection);
+  const setScreen = useUiStore((s) => s.setScreen);
+  const logoTapCount = useUiStore((s) => s.logoTapCount);
+  const setLogoTapCount = useUiStore((s) => s.setLogoTapCount);
+  const debugMode = useUiStore((s) => s.debugMode);
+  const setDebugMode = useUiStore((s) => s.setDebugMode);
+  const setMessage = useUiStore((s) => s.setMessage);
 
-export function TitleScreen({
-  showRules,
-  setShowRules,
-  showCollection,
-  setShowCollection,
-  collection,
-  companion,
-  setCompanion,
-  unlockedCats,
-  setUnlockedCats,
-  setCollection,
-  lapCount,
-  logoTapCount,
-  setLogoTapCount,
-  debugMode,
-  setDebugMode,
-  setMessage,
-  onStart,
-}: TitleScreenProps) {
-  const cat = CAT_TYPES.find(c => c.key === companion) || CAT_TYPES[0];
+  const collection = useProgressStore((s) => s.collection);
+  const setCollection = useProgressStore((s) => s.setCollection);
+  const companion = useProgressStore((s) => s.companion);
+  const setCompanion = useProgressStore((s) => s.setCompanion);
+  const unlockedCats = useProgressStore((s) => s.unlockedCats);
+  const setUnlockedCats = useProgressStore((s) => s.setUnlockedCats);
+  const lapCount = useProgressStore((s) => s.lapCount);
+  const setLapCats = useProgressStore((s) => s.setLapCats);
+
+  const setScore = useGameStore((s) => s.setScore);
+  const initStage = useInitStage();
+
+  const cat = CAT_TYPES.find((c) => c.key === companion) || CAT_TYPES[0];
   const skill = SKILLS[cat.skill];
-  const unlockedList = CAT_TYPES.filter(c => unlockedCats.includes(c.key));
-  const currentIdx = unlockedList.findIndex(c => c.key === companion);
+  const unlockedList = CAT_TYPES.filter((c) => unlockedCats.includes(c.key));
+  const currentIdx = unlockedList.findIndex((c) => c.key === companion);
   const cycle = (dir: number) => {
     if (unlockedList.length <= 1) return;
     const next = (currentIdx + dir + unlockedList.length) % unlockedList.length;
     setCompanion(unlockedList[next].key);
+  };
+
+  const onStart = () => {
+    initStage(0);
+    setScore(0);
+    setCollection([]);
+    setLapCats([]);
+    setScreen("game");
   };
 
   return (
@@ -117,8 +112,8 @@ export function TitleScreen({
         {debugMode && (
           <button
             onClick={() => {
-              setUnlockedCats(CAT_TYPES.map(c => c.key));
-              setCollection(CAT_TYPES.map(c => ({ ...c })));
+              setUnlockedCats(CAT_TYPES.map((c) => c.key));
+              setCollection(CAT_TYPES.map((c) => ({ ...c })));
               setDebugMode(false);
               setMessage("🛠 全猫コンプリート！");
               setTimeout(() => setMessage(""), 2000);
