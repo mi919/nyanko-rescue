@@ -15,6 +15,10 @@ type CellProps = {
   crossTarget: boolean;
 };
 
+// Static layout shared across every cell variant.
+const cellBase = "flex items-center justify-center rounded-md border-2";
+const cellInteractive = "cursor-pointer select-none transition-transform";
+
 export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, foreseeing, foreseePreview, crossTarget }: CellProps) {
   const ref = useRef<HTMLDivElement>(null);
   const handleContext = (e: MouseEvent<HTMLDivElement>) => { e.preventDefault(); onRightClick(); };
@@ -29,7 +33,11 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
       ? (cell.type === "dog" ? "🐕" : cell.type === "cat" ? "🐱" : `${cell.dogCount}/${cell.catCount}`)
       : null;
     return (
-      <div ref={ref} onClick={onClick} onContextMenu={handleContext}
+      <div
+        ref={ref}
+        onClick={onClick}
+        onContextMenu={handleContext}
+        className={`${cellBase} ${cellInteractive} border-transparent`}
         style={{
           width: cellSize, height: cellSize,
           background: isPreview
@@ -43,15 +51,12 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
                   : showCross
                     ? "linear-gradient(145deg, #ffb74d, #fb8c00)"
                     : cell.flagged ? "#fff9c4" : "linear-gradient(145deg, #b0bec5, #90a4ae)",
-          border: isPreview ? "2px solid #4527a0"
-            : showPeek ? "2px solid #b71c1c"
-            : showMark ? "2px solid #2e7d32"
-            : showForesee ? "2px solid #6a1b9a"
-            : showCross ? "2px solid #e65100"
-            : "2px solid #78909c",
-          borderRadius: 6,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer",
+          borderColor: isPreview ? "#4527a0"
+            : showPeek ? "#b71c1c"
+            : showMark ? "#2e7d32"
+            : showForesee ? "#6a1b9a"
+            : showCross ? "#e65100"
+            : "#78909c",
           fontSize: isPreview && cell.type === "empty" ? 10 : 18,
           fontWeight: isPreview ? 800 : "normal",
           color: isPreview ? "#fff" : undefined,
@@ -66,7 +71,6 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
                   : showCross
                     ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 10px rgba(251,140,0,0.7)"
                     : "inset 1px 1px 2px rgba(255,255,255,0.4), 2px 2px 4px rgba(0,0,0,0.15)",
-          transition: "transform 0.1s", userSelect: "none",
           animation: isPreview
             ? "markPulse 0.8s ease-in-out infinite"
             : showPeek
@@ -92,11 +96,10 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
 
   if (cell.type === "dog") {
     return (
-      <div style={{
-        width: cellSize, height: cellSize, background: "#ffcdd2",
-        border: "2px solid #e57373", borderRadius: 6,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
+      <div
+        className={`${cellBase} bg-[#ffcdd2] border-[#e57373]`}
+        style={{ width: cellSize, height: cellSize }}
+      >
         <Sprite name="dog" size={32} />
       </div>
     );
@@ -104,12 +107,13 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
 
   if (cell.type === "cat") {
     return (
-      <div style={{
-        width: cellSize, height: cellSize, background: "#c8e6c9",
-        border: "2px solid #81c784", borderRadius: 6,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        animation: cell.revealed ? "pop 0.3s ease-out" : undefined,
-      }}>
+      <div
+        className={`${cellBase} bg-[#c8e6c9] border-[#81c784]`}
+        style={{
+          width: cellSize, height: cellSize,
+          animation: cell.revealed ? "pop 0.3s ease-out" : undefined,
+        }}
+      >
         <Sprite name={cell.catType?.key || "mike"} size={32} />
       </div>
     );
@@ -118,15 +122,13 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
   const hasDog = cell.dogCount > 0;
   const hasCat = cell.catCount > 0;
   return (
-    <div style={{
-      width: cellSize, height: cellSize, background: "#eceff1",
-      border: "2px solid #cfd8dc", borderRadius: 6,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      gap: 2, fontSize: 13, fontWeight: 800,
-    }}>
-      {hasDog && <span style={{ color: "#e53935" }}>{cell.dogCount}</span>}
-      {hasDog && hasCat && <span style={{ color: "#aaa" }}>/</span>}
-      {hasCat && <span style={{ color: "#43a047" }}>{cell.catCount}</span>}
+    <div
+      className={`${cellBase} bg-[#eceff1] border-[#cfd8dc] gap-0.5 text-[13px] font-extrabold`}
+      style={{ width: cellSize, height: cellSize }}
+    >
+      {hasDog && <span className="text-[#e53935]">{cell.dogCount}</span>}
+      {hasDog && hasCat && <span className="text-[#aaa]">/</span>}
+      {hasCat && <span className="text-[#43a047]">{cell.catCount}</span>}
     </div>
   );
 }
