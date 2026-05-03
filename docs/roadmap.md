@@ -137,6 +137,29 @@
 | 2.0 | 2026/04/13 | スキルシステム（4種）、お供選択、レアリティ、スコア詳細 |
 | 2.1 | 2026/04/19 | 全10スキル実装、周回システム、仲間との出会い画面、じゅうじサーチ光演出 |
 | 2.2 | 2026/04/25 | Vite + React プロジェクト化（初版）、Docker構成、localStorage永続化 |
+| 3.0 | 2026/04/26 | コードベース大規模リファクタ（PR 1-8）：TypeScript（strict）、Tailwind CSS、Zustand 状態管理、screens/ 分離、スキルハンドラ独立化 |
+
+### v3.0 リファクタリング詳細
+
+詳細は `docs/refactor-roadmap.md` 参照。8 PR に分割して実施:
+
+| PR | 内容 | コミット |
+|----|------|---------|
+| PR 1 | TS 基盤 + 純粋抽出 + 抽出分の TS 化 | `433e2cd`, `0f113ae`, `1e822de` |
+| PR 2 | 演出オーバーレイ・モーダル・キーフレーム分離 | `0e547a8` |
+| PR 3 | Tailwind CSS 導入 + 抽出済みコンポーネント移行 | `eefd77e` |
+| PR 4 | Title/Encounter/Ending 画面を screens/ に分離 | `6250cff` |
+| PR 5 | Zustand を導入し全 state を 5 ストアに集約 | `0a0e065` |
+| PR 6 | GameScreen 抽出 + App.tsx をルーター化 | `a86cb13` |
+| PR 7 | スキルハンドラ独立化 + Cell.tsx Tailwind 化 | `bcee5f0` |
+| PR 8 | TypeScript 厳密化 + ドキュメント仕上げ | (本 PR) |
+
+**成果指標:**
+- 元 `App.jsx`: **2873 行 1 ファイル** → `App.tsx` **24 行のルーター** + 多数の小さなモジュール
+- TypeScript: 全 src 配下が `.ts`/`.tsx` 化、`strict: true` 通過
+- 状態管理: 51 個の useState → 5 個の Zustand ストア
+- スタイル: Tailwind CSS（動的値はインライン併用のハイブリッド）
+- スキル: 230 行の `activateSkill` → 12 行 + 10 個の独立ファイル
 
 ---
 

@@ -1,13 +1,19 @@
 # 🐱 にゃんこレスキュー アニメーション仕様書
 
-**バージョン:** 2.1
-**最終更新:** 2026/04/19
+**バージョン:** 3.0
+**最終更新:** 2026/04/26
 
 ---
 
 ## 1. 概要
 
-全51種類のCSSキーフレームアニメーションを、用途別に分類して定義する。全てインラインの `<style>` タグ内に記述。
+全 51 種類の CSS キーフレームアニメーションを、用途別に分類して定義する。
+
+**v3.0 (PR 2) からの構成変更:**
+- 全キーフレームは `src/components/effects/keyframes.ts` の `ALL_KEYFRAMES` テンプレート文字列に集約
+- `src/components/effects/KeyframeStyles.tsx` の `<KeyframeStyles />` コンポーネントが `<style>{ALL_KEYFRAMES}</style>` を出力
+- `src/main.tsx` で `<KeyframeStyles />` を `<App />` の前に 1 度だけレンダ（グローバル注入）
+- v2.x までの 3 箇所に分散していた `<style>` タグは削除済み
 
 ---
 

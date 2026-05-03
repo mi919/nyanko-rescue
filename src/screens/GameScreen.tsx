@@ -239,7 +239,7 @@ export function GameScreen() {
   }, [hintPhase, hintIdx]);
 
 
-  const finalizeStageScore = (finalBoard) => {
+  const finalizeStageScore = (finalBoard: import("../types/board").Cell[]) => {
     // Subtract time spent in foresee/cross selection mode (selection time should not count toward clear time)
     let totalForeseeMs = foreseeTimeOffset;
     if (foreseeMode > 0 && foreseeStartTime > 0) {
@@ -348,7 +348,7 @@ export function GameScreen() {
     SKILL_HANDLERS[skillType]({ stage, triggerPawEffects });
   };
 
-  const handleClick = (idx, e) => {
+  const handleClick = (idx: number, e: import("react").MouseEvent<HTMLDivElement>) => {
     if (gameState !== "playing" || dogAttack) return;
     // Skip hint animation if still playing
     if (hintPhase !== "done") {
@@ -360,7 +360,7 @@ export function GameScreen() {
       const cell = board[idx];
       let preview;
       if (cell.type === "dog") preview = { idx, type: "dog", label: "🐕 犬マス！" };
-      else if (cell.type === "cat") preview = { idx, type: "cat", label: `🐱 ${cell.catType.name}` };
+      else if (cell.type === "cat") preview = { idx, type: "cat", label: `🐱 ${cell.catType?.name ?? ""}` };
       else preview = { idx, type: "empty", label: `空白 (犬${cell.dogCount}/猫${cell.catCount})` };
       setForeseePreview(preview);
       const newCount = foreseeMode - 1;
@@ -475,6 +475,7 @@ export function GameScreen() {
     if (cell.type === "cat") {
       cell.revealed = true;
       const cat = cell.catType;
+      if (!cat) return;
       const newRescued = [...rescued, cat];
       setRescued(newRescued);
       setCatRescueCount(c => c + 1);
@@ -528,7 +529,7 @@ export function GameScreen() {
     setSkillGauge(g => Math.min(100, g + gain));
   };
 
-  const handleRightClick = (idx) => {
+  const handleRightClick = (idx: number) => {
     if (gameState !== "playing" || board[idx].revealed) return;
     const newBoard = board.map(c => ({ ...c }));
     newBoard[idx].flagged = !newBoard[idx].flagged;
@@ -753,7 +754,7 @@ export function GameScreen() {
             peeking={peekingDogs}
             marked={markedCatIdx === i}
             foreseeing={foreseeMode > 0}
-            foreseePreview={foreseePreview && foreseePreview.idx === i}
+            foreseePreview={!!foreseePreview && foreseePreview.idx === i}
             crossTarget={crossSelecting} />
         ))}
         {/* Hint highlight overlay */}
