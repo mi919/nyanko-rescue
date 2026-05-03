@@ -66,21 +66,63 @@ http://localhost:8080 でアクセス。`Dockerfile` はマルチステージ（
 
 ---
 
-## 5. ディレクトリ構成
+## 5. ディレクトリ構成（v3.0）
 
 ```
 nyanko-rescue/
-├── src/              # アプリ本体（App.jsx / main.jsx）
-├── assets/           # 画像アセット（猫スプライト・背景・ロゴ等）
-├── docs/             # 全仕様書（CLAUDE.md 参照）
-├── samples/          # プロトタイプ（nyanko-rescue.jsx、参考資料）
-├── index.html        # エントリ HTML
-├── vite.config.js    # Vite 設定
-├── package.json      # スクリプト・依存
-├── Dockerfile        # 本番ビルド用（build → nginx）
-├── docker-compose.yml# dev / prod プロファイル
-└── CLAUDE.md         # プロジェクト規約
+├── src/
+│   ├── App.tsx                # 24 行のルーター
+│   ├── main.tsx
+│   ├── index.css              # Tailwind directives
+│   ├── vite-env.d.ts          # Vite asset 型宣言
+│   ├── assets/
+│   ├── types/                 # ドメイン型 (Cell / Stage / CatType / Skill)
+│   ├── constants/             # データ定数 (stages / cats / skills / scoring / sprite / theme)
+│   ├── hooks/
+│   │   ├── useLocalStorageState.ts
+│   │   └── useInitStage.ts    # ステージ初期化フック (Title/Game 共通)
+│   ├── lib/
+│   │   ├── board.ts           # createBoard / floodFill / pickWeightedCat
+│   │   └── skills/            # スキルハンドラ 10 個 + types/index
+│   ├── stores/                # Zustand ストア 5 個
+│   │   ├── uiStore.ts
+│   │   ├── gameStore.ts
+│   │   ├── skillStore.ts
+│   │   ├── progressStore.ts   # persist middleware で localStorage 統合
+│   │   └── effectStore.ts
+│   ├── components/
+│   │   ├── Sprite.tsx
+│   │   ├── Cell.tsx
+│   │   ├── effects/           # 演出オーバーレイ 10 個 + KeyframeStyles
+│   │   └── modals/            # RulesModal / CollectionModal
+│   └── screens/               # 4 画面
+│       ├── TitleScreen.tsx
+│       ├── GameScreen.tsx
+│       ├── EncounterScreen.tsx
+│       └── EndingScreen.tsx
+├── docs/                # 全仕様書 (CLAUDE.md 参照)
+├── samples/             # プロトタイプ (参考資料)
+├── index.html
+├── vite.config.ts       # TypeScript 設定
+├── tsconfig.json        # strict: true
+├── tailwind.config.js
+├── postcss.config.js
+├── package.json
+├── Dockerfile
+├── docker-compose.yml
+└── CLAUDE.md
 ```
+
+### 採用技術スタック (v3.0)
+
+| 領域 | 採用 |
+|------|------|
+| 言語 | TypeScript 5 (`strict: true`) |
+| フレームワーク | React 18 |
+| ビルド | Vite 5 |
+| 状態管理 | Zustand 5（5 ストア + `persist` middleware で localStorage 統合） |
+| スタイル | Tailwind CSS 3 + 動的値はインライン style のハイブリッド |
+| キーフレーム | `src/components/effects/keyframes.ts` に 51 個集約、`<KeyframeStyles />` で 1 度だけグローバル注入 |
 
 ---
 

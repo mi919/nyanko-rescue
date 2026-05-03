@@ -1,7 +1,7 @@
 # 🐱 にゃんこレスキュー スキルロジック仕様書
 
-**バージョン:** 2.1
-**最終更新:** 2026/04/19
+**バージョン:** 3.0
+**最終更新:** 2026/04/26
 
 ---
 
@@ -467,4 +467,53 @@ if barrierActive:
 
 ---
 
-*本仕様書は現プログラム実装を正として記述。*
+## 8. 実装ファイル配置（v3.0 / PR 7）
+
+各スキルは独立した TypeScript モジュールとして実装され、`src/lib/skills/` 配下に配置される。`SKILL_HANDLERS` マップ経由でディスパッチされる。
+
+| スキル | ファイル | 追加依存 |
+|--------|---------|---------|
+| heal | `src/lib/skills/heal.ts` | gameStore / uiStore |
+| lucky | `src/lib/skills/lucky.ts` | skillStore / uiStore |
+| pawhit | `src/lib/skills/pawhit.ts` | gameStore / uiStore + `triggerPawEffects` |
+| mark | `src/lib/skills/mark.ts` | gameStore / skillStore / uiStore |
+| line | `src/lib/skills/line.ts` | gameStore / uiStore + `triggerPawEffects` |
+| cross | `src/lib/skills/cross.ts` | gameStore / skillStore / uiStore |
+| peek | `src/lib/skills/peek.ts` | skillStore / uiStore |
+| foresee | `src/lib/skills/foresee.ts` | skillStore / uiStore |
+| rush | `src/lib/skills/rush.ts` | gameStore / uiStore + `triggerPawEffects` |
+| barrier | `src/lib/skills/barrier.ts` | skillStore / uiStore |
+
+### 8-1. SkillContext
+
+```ts
+// src/lib/skills/types.ts
+export type SkillContext = {
+  stage: Stage;
+  triggerPawEffects: (indices: number[], options?: { stagger?: number; big?: boolean }) => void;
+};
+
+export type SkillHandler = (ctx: SkillContext) => void;
+```
+
+ストアの state / setter は `useStore.getState()` でハンドラ内から直接取得する（context には含めない）。`triggerPawEffects` は GameScreen 内の `boardRef` DOM に依存するため context 経由で渡す。
+
+### 8-2. ディスパッチ
+
+```ts
+// src/lib/skills/index.ts
+export const SKILL_HANDLERS: Record<SkillType, SkillHandler> = {
+  heal: healSkill,
+  lucky: luckySkill,
+  // ...
+};
+```
+
+```ts
+// src/screens/GameScreen.tsx (activateSkill)
+SKILL_HANDLERS[skillType]({ stage, triggerPawEffects });
+```
+
+---
+
+*本仕様書は現プログラム実装（v3.0）を正として記述。*
