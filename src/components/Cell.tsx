@@ -1,6 +1,6 @@
-import { useRef, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { Sprite } from "./Sprite";
-import { cellSize } from "../constants/theme";
+import { cellSize, palette } from "../constants/theme";
 import type { Cell as CellData } from "../types/board";
 
 type CellProps = {
@@ -15,13 +15,29 @@ type CellProps = {
   crossTarget: boolean;
 };
 
-// Static layout shared across every cell variant.
-const cellBase = "flex items-center justify-center rounded-md border-2";
-const cellInteractive = "cursor-pointer select-none transition-transform";
+const cellBase = "relative flex items-center justify-center rounded-md overflow-hidden";
+const cellInteractive = "cursor-pointer select-none";
+
+const NEU_REST_SHADOW =
+  "6px 6px 12px rgba(176,190,197,0.45), -4px -4px 10px rgba(255,255,255,0.85), inset 1px 1px 2px rgba(255,255,255,0.6)";
+const NEU_PRESSED_SHADOW =
+  "inset 4px 4px 8px rgba(120,144,156,0.35), inset -2px -2px 6px rgba(255,255,255,0.6)";
 
 export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, foreseeing, foreseePreview, crossTarget }: CellProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [pressed, setPressed] = useState(false);
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+
   const handleContext = (e: MouseEvent<HTMLDivElement>) => { e.preventDefault(); onRightClick(); };
+
+  const spawnRipple = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now() + Math.random();
+    setRipples(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 500);
+  };
 
   if (!cell.revealed && !gameOver) {
     const showPeek = peeking && cell.type === "dog";
@@ -32,58 +48,86 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
     const previewIcon = isPreview
       ? (cell.type === "dog" ? "🐕" : cell.type === "cat" ? "🐱" : `${cell.dogCount}/${cell.catCount}`)
       : null;
+
+    let background: string;
+    let shadow: string;
+    let borderColor = "transparent";
+    let animation = "none";
+
+    if (isPreview) {
+      background = "linear-gradient(145deg, #d1c4e9, #b39ddb)";
+      shadow = "inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 16px rgba(149,117,205,0.7)";
+      borderColor = "#9575cd";
+      animation = "markPulse 0.8s ease-in-out infinite";
+    } else if (showPeek) {
+      background = "linear-gradient(145deg, #ffcdd2, #ef9a9a)";
+      shadow = "inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 12px rgba(239,154,154,0.85)";
+      borderColor = "#e57373";
+      animation = "peekPulse 1s ease-in-out infinite";
+    } else if (showMark) {
+      background = "linear-gradient(145deg, #c8e6c9, #a5d6a7)";
+      shadow = "inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 12px rgba(165,214,167,0.95)";
+      borderColor = "#81c784";
+      animation = "markPulse 1s ease-in-out infinite";
+    } else if (showForesee) {
+      background = "linear-gradient(145deg, #e1bee7, #ce93d8)";
+      shadow = "inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 10px rgba(206,147,216,0.7)";
+      borderColor = "#ba68c8";
+      animation = "peekPulse 1.2s ease-in-out infinite";
+    } else if (showCross) {
+      background = "linear-gradient(145deg, #ffe0b2, #ffcc80)";
+      shadow = "inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 10px rgba(255,204,128,0.85)";
+      borderColor = "#ffb74d";
+      animation = "crossPulse 1s ease-in-out infinite";
+    } else if (cell.flagged) {
+      background = "linear-gradient(145deg, #fff9c4, #fff59d)";
+      shadow = "inset 2px 2px 4px rgba(255,255,255,0.6), 2px 2px 6px rgba(255,213,79,0.45)";
+      borderColor = "transparent";
+    } else {
+      background = `linear-gradient(145deg, ${palette.cellBaseHi}, ${palette.cellBaseLo})`;
+      shadow = pressed ? NEU_PRESSED_SHADOW : NEU_REST_SHADOW;
+    }
+
     return (
       <div
         ref={ref}
-        onClick={onClick}
+        onClick={(e) => { spawnRipple(e); onClick(e); }}
         onContextMenu={handleContext}
-        className={`${cellBase} ${cellInteractive} border-transparent`}
+        className={`${cellBase} ${cellInteractive} border`}
         style={{
           width: cellSize, height: cellSize,
-          background: isPreview
-            ? "linear-gradient(145deg, #b39ddb, #7e57c2)"
-            : showPeek
-              ? "linear-gradient(145deg, #ef5350, #c62828)"
-              : showMark
-                ? "linear-gradient(145deg, #81c784, #43a047)"
-                : showForesee
-                  ? "linear-gradient(145deg, #ce93d8, #ab47bc)"
-                  : showCross
-                    ? "linear-gradient(145deg, #ffb74d, #fb8c00)"
-                    : cell.flagged ? "#fff9c4" : "linear-gradient(145deg, #b0bec5, #90a4ae)",
-          borderColor: isPreview ? "#4527a0"
-            : showPeek ? "#b71c1c"
-            : showMark ? "#2e7d32"
-            : showForesee ? "#6a1b9a"
-            : showCross ? "#e65100"
-            : "#78909c",
+          background,
+          borderColor,
           fontSize: isPreview && cell.type === "empty" ? 10 : 18,
           fontWeight: isPreview ? 800 : "normal",
           color: isPreview ? "#fff" : undefined,
-          boxShadow: isPreview
-            ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 16px rgba(126,87,194,1)"
-            : showPeek
-              ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 12px rgba(229,57,53,0.7)"
-              : showMark
-                ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 12px rgba(67,160,71,0.8)"
-                : showForesee
-                  ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 10px rgba(171,71,188,0.6)"
-                  : showCross
-                    ? "inset 1px 1px 2px rgba(255,255,255,0.3), 0 0 10px rgba(251,140,0,0.7)"
-                    : "inset 1px 1px 2px rgba(255,255,255,0.4), 2px 2px 4px rgba(0,0,0,0.15)",
-          animation: isPreview
-            ? "markPulse 0.8s ease-in-out infinite"
-            : showPeek
-              ? "peekPulse 1s ease-in-out infinite"
-              : showMark ? "markPulse 1s ease-in-out infinite"
-              : showForesee ? "peekPulse 1.2s ease-in-out infinite"
-              : showCross ? "crossPulse 1s ease-in-out infinite"
-              : "none",
+          boxShadow: shadow,
+          animation,
+          transform: pressed ? "scale(0.94)" : "scale(1)",
+          transition: "transform 0.12s ease, box-shadow 0.18s ease",
+          willChange: "transform",
         }}
-        onMouseDown={() => ref.current && (ref.current.style.transform = "scale(0.92)")}
-        onMouseUp={() => ref.current && (ref.current.style.transform = "scale(1)")}
-        onMouseLeave={() => ref.current && (ref.current.style.transform = "scale(1)")}
+        onMouseDown={() => setPressed(true)}
+        onMouseUp={() => setPressed(false)}
+        onMouseLeave={() => setPressed(false)}
+        onTouchStart={() => setPressed(true)}
+        onTouchEnd={() => setPressed(false)}
       >
+        {ripples.map(r => (
+          <span
+            key={r.id}
+            style={{
+              position: "absolute",
+              left: r.x, top: r.y,
+              width: cellSize * 1.4, height: cellSize * 1.4,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%)",
+              transform: "translate(-50%,-50%) scale(0)",
+              animation: "cellRipple 0.5s ease-out forwards",
+              pointerEvents: "none",
+            }}
+          />
+        ))}
         {isPreview ? previewIcon
           : showPeek ? "🐕"
           : showMark ? "🎯"
@@ -97,8 +141,13 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
   if (cell.type === "dog") {
     return (
       <div
-        className={`${cellBase} bg-[#ffcdd2] border-[#e57373]`}
-        style={{ width: cellSize, height: cellSize }}
+        className={`${cellBase} border`}
+        style={{
+          width: cellSize, height: cellSize,
+          background: `linear-gradient(145deg, ${palette.dogBg}, #fbcfcf)`,
+          borderColor: palette.dogBorder,
+          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(244,138,138,0.25)",
+        }}
       >
         <Sprite name="dog" size={32} />
       </div>
@@ -108,9 +157,12 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
   if (cell.type === "cat") {
     return (
       <div
-        className={`${cellBase} bg-[#c8e6c9] border-[#81c784]`}
+        className={`${cellBase} border`}
         style={{
           width: cellSize, height: cellSize,
+          background: `linear-gradient(145deg, ${palette.catBg}, #d6ead8)`,
+          borderColor: palette.catBorder,
+          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(165,214,167,0.3)",
           animation: cell.revealed ? "pop 0.3s ease-out" : undefined,
         }}
       >
@@ -123,12 +175,17 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
   const hasCat = cell.catCount > 0;
   return (
     <div
-      className={`${cellBase} bg-[#eceff1] border-[#cfd8dc] gap-0.5 text-[13px] font-extrabold`}
-      style={{ width: cellSize, height: cellSize }}
+      className={`${cellBase} border gap-0.5 text-[13px] font-extrabold`}
+      style={{
+        width: cellSize, height: cellSize,
+        background: "linear-gradient(145deg, #fafbfd, #e6ecf2)",
+        borderColor: "#dde4ec",
+        boxShadow: "inset 2px 2px 5px rgba(176,190,197,0.35), inset -2px -2px 4px rgba(255,255,255,0.85)",
+      }}
     >
-      {hasDog && <span className="text-[#e53935]">{cell.dogCount}</span>}
-      {hasDog && hasCat && <span className="text-[#aaa]">/</span>}
-      {hasCat && <span className="text-[#43a047]">{cell.catCount}</span>}
+      {hasDog && <span style={{ color: palette.dogText }}>{cell.dogCount}</span>}
+      {hasDog && hasCat && <span style={{ color: "#b0bec5" }}>/</span>}
+      {hasCat && <span style={{ color: palette.catText }}>{cell.catCount}</span>}
     </div>
   );
 }

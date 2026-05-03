@@ -5,7 +5,7 @@ import { STAGES } from "../constants/stages";
 import { SCORING } from "../constants/scoring";
 import { SKILLS } from "../constants/skills";
 import { CAT_TYPES } from "../constants/cats";
-import { cellSize, ff } from "../constants/theme";
+import { cellSize, ff, glass, palette } from "../constants/theme";
 import { createBoard, floodFill } from "../lib/board";
 import { DogAttack } from "../components/effects/DogAttack";
 import { CatRescue } from "../components/effects/CatRescue";
@@ -556,13 +556,48 @@ export function GameScreen() {
   // ─── Encounter Screen (replaces roulette) ────────────────────
 
 
+  const ambientBlobs = useMemo(() => (
+    Array.from({ length: 5 }, (_, i) => ({
+      id: i,
+      size: 140 + (i % 3) * 60,
+      top: 10 + i * 16,
+      hue: [200, 130, 50, 320, 280][i],
+      duration: 28 + i * 6,
+      delay: -i * 5,
+      floatDuration: 6 + (i % 3) * 2,
+    }))
+  ), []);
+
   return (
     <div style={{
+      position: "relative",
       minHeight: "100vh",
       background: `linear-gradient(180deg, ${stage.bg} 0%, #fafafa 100%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       fontFamily: ff, padding: "12px 8px",
+      overflow: "hidden",
     }}>
+
+      {/* Ambient drifting blobs (背景アンビエント) */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        overflow: "hidden", zIndex: 0,
+      }}>
+        {ambientBlobs.map(b => (
+          <div key={b.id} style={{
+            position: "absolute",
+            top: `${b.top}%`,
+            width: b.size, height: b.size,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, hsla(${b.hue},70%,80%,0.55) 0%, hsla(${b.hue},70%,80%,0) 70%)`,
+            filter: "blur(8px)",
+            animation: `ambientDrift ${b.duration}s linear ${b.delay}s infinite, ambientFloat ${b.floatDuration}s ease-in-out infinite`,
+            willChange: "transform",
+          }} />
+        ))}
+      </div>
+
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
 
       <DogAttack active={dogAttack} />
 
@@ -584,17 +619,27 @@ export function GameScreen() {
 
       <Toast message={message} gameState={gameState} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <span style={{ fontSize: 22 }}>{stage.emoji}</span>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: "#37474f", margin: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 22, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))" }}>{stage.emoji}</span>
+        <h2 style={{
+          fontSize: 18, fontWeight: 800, color: palette.textMain, margin: 0,
+          letterSpacing: "0.02em",
+          textShadow: "0 1px 2px rgba(255,255,255,0.6)",
+        }}>
           ステージ {stageIdx + 1}: {stage.name}
         </h2>
       </div>
 
       <div style={{
-        display: "flex", gap: 12, alignItems: "center", marginBottom: 8,
-        background: "rgba(255,255,255,0.85)", borderRadius: 12, padding: "6px 14px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)", fontSize: 14, fontWeight: 600,
+        display: "flex", gap: 12, alignItems: "center", marginBottom: 10,
+        background: glass.bg,
+        backdropFilter: glass.blur,
+        WebkitBackdropFilter: glass.blur,
+        border: glass.border,
+        borderRadius: 16, padding: "8px 16px",
+        boxShadow: glass.shadow,
+        fontSize: 14, fontWeight: 600,
+        color: palette.textMain,
         flexWrap: "wrap", justifyContent: "center",
       }}>
         <span>❤️ {"♥".repeat(lives)}{"♡".repeat(3 - lives)}</span>
@@ -660,43 +705,70 @@ export function GameScreen() {
         const ready = skillGauge >= 100;
         return (
           <div style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: "rgba(255,255,255,0.85)", borderRadius: 12,
-            padding: "6px 10px", marginBottom: 8,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            position: "relative",
+            display: "flex", alignItems: "center", gap: 10,
+            background: glass.bg,
+            backdropFilter: glass.blur,
+            WebkitBackdropFilter: glass.blur,
+            border: glass.border,
+            borderRadius: 16,
+            padding: "8px 12px", marginBottom: 10,
+            boxShadow: glass.shadow,
             maxWidth: 360, width: "100%",
+            overflow: "hidden",
           }}>
+            {ready && (
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)",
+                width: "40%",
+                animation: "panelSheen 2.4s ease-in-out infinite",
+                pointerEvents: "none",
+              }} />
+            )}
             <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: `${skill.color}22`,
+              width: 38, height: 38, borderRadius: "50%",
+              background: `radial-gradient(circle, ${skill.color}33 0%, ${skill.color}11 100%)`,
               border: `2px solid ${skill.color}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
+              boxShadow: `inset 1px 1px 2px rgba(255,255,255,0.6), 0 2px 6px ${skill.color}40`,
+              animation: ready ? "gaugeGlowPulse 1.6s ease-in-out infinite" : "none",
             }}>
               <Sprite name={cat.key} size={28} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontSize: 10, fontWeight: 800, color: "#666",
+                fontSize: 10, fontWeight: 800, color: palette.textSub,
                 display: "flex", justifyContent: "space-between",
+                letterSpacing: "0.04em",
               }}>
                 <span>{skill.icon} {skill.name}</span>
-                <span>{Math.floor(skillGauge)}%</span>
+                <span style={{ color: ready ? "#ff7043" : palette.textSub }}>{Math.floor(skillGauge)}%</span>
               </div>
               <div style={{
-                height: 8, background: "#e0e0e0", borderRadius: 4,
-                overflow: "hidden", marginTop: 2,
-                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.15)",
+                position: "relative",
+                height: 10, background: "rgba(176,190,197,0.25)", borderRadius: 6,
+                overflow: "hidden", marginTop: 3,
+                boxShadow: "inset 0 1px 3px rgba(120,144,156,0.35), inset 0 -1px 1px rgba(255,255,255,0.6)",
               }}>
                 <div style={{
                   width: `${skillGauge}%`, height: "100%",
                   background: ready
                     ? `linear-gradient(90deg, #ffd54f, #ffa726, #ff7043)`
-                    : `linear-gradient(90deg, #b0bec5, ${skill.color})`,
-                  borderRadius: 4,
-                  transition: "width 0.3s ease-out",
-                  boxShadow: ready ? `0 0 8px ${skill.color}` : "none",
+                    : `linear-gradient(90deg, #cfd8dc, ${skill.color})`,
+                  borderRadius: 6,
+                  transition: "width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  boxShadow: ready ? `0 0 10px ${skill.color}` : `0 0 4px ${skill.color}40`,
                   animation: ready ? "gaugeShimmer 1.5s ease-in-out infinite" : "none",
+                }} />
+                {/* Glossy top highlight */}
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0,
+                  height: "45%",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0))",
+                  borderRadius: "6px 6px 0 0",
+                  pointerEvents: "none",
                 }} />
               </div>
             </div>
@@ -738,12 +810,15 @@ export function GameScreen() {
         position: "relative",
         display: "grid",
         gridTemplateColumns: `repeat(${stage.cols}, ${cellSize}px)`,
-        gap: 3, padding: 8,
-        background: flagMode ? "rgba(255, 224, 130, 0.85)" : "rgba(255,255,255,0.6)",
-        borderRadius: 12,
-        boxShadow: flagMode ? "0 0 0 3px #ffa726, 0 4px 20px rgba(255,167,38,0.3)" : "0 4px 20px rgba(0,0,0,0.08)",
-        marginBottom: 8,
-        transition: "all 0.2s",
+        gap: 4, padding: 12,
+        background: flagMode ? glass.bgFlag : glass.bgStrong,
+        backdropFilter: glass.blurStrong,
+        WebkitBackdropFilter: glass.blurStrong,
+        border: flagMode ? glass.borderFlag : glass.border,
+        borderRadius: 18,
+        boxShadow: flagMode ? glass.shadowFlag : glass.shadow,
+        marginBottom: 10,
+        transition: "background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
         animation: dogAttack ? "attackShake 0.6s ease-in-out" : (hintPhase !== "done" ? "boardFadeIn 0.4s ease-out" : "none"),
       }}>
         {board.map((cell, i) => (
@@ -817,13 +892,19 @@ export function GameScreen() {
       </div>
 
       {rescued.length > 0 && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap", justifyContent: "center" }}>
           {rescued.map((cat, i) => (
             <div key={i} style={{
-              background: "#fff", borderRadius: 10, padding: "4px 10px",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.1)", fontSize: 11,
-              display: "flex", alignItems: "center", gap: 4,
-              animation: "pop 0.3s ease-out",
+              background: glass.bgStrong,
+              backdropFilter: glass.blur,
+              WebkitBackdropFilter: glass.blur,
+              border: glass.border,
+              borderRadius: 14, padding: "4px 12px",
+              boxShadow: "0 4px 12px rgba(120,144,156,0.18), inset 0 1px 0 rgba(255,255,255,0.7)",
+              fontSize: 11,
+              display: "flex", alignItems: "center", gap: 5,
+              animation: "pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              color: palette.textMain,
             }}>
               <Sprite name={cat.key} size={22} />
               <span style={{ fontWeight: 700 }}>{cat.name}</span>
@@ -901,6 +982,8 @@ export function GameScreen() {
                     padding: "2px 0",
                     color: item.highlight ? "#d84315" : "#5d4037",
                     fontWeight: item.highlight ? 800 : 600,
+                    opacity: 0,
+                    animation: `breakdownRowIn 0.32s ease-out ${0.04 * i}s forwards`,
                   }}>
                     <span>{item.label}</span>
                     <span>+{item.value}</span>
@@ -1007,8 +1090,13 @@ export function GameScreen() {
         collection={collection}
       />
 
-      <div style={{ fontSize: 11, color: "#888", marginTop: 8, textAlign: "center" }}>
+      <div style={{
+        fontSize: 11, color: palette.textSub, marginTop: 8, textAlign: "center",
+        textShadow: "0 1px 2px rgba(255,255,255,0.5)",
+      }}>
         {flagMode ? "🚩 フラグモード：タップで旗を立てる/外す" : "💡 フラグボタンでフラグモード切替"}
+      </div>
+
       </div>
     </div>
   );

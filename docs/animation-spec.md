@@ -1,7 +1,7 @@
 # 🐱 にゃんこレスキュー アニメーション仕様書
 
-**バージョン:** 3.0
-**最終更新:** 2026/04/26
+**バージョン:** 3.1
+**最終更新:** 2026/05/03
 
 ---
 
@@ -267,6 +267,36 @@ zIndex: 280, pointerEvents: none
 | `petalFloat` | - | 花びら | 装飾用の浮遊 |
 | `catSpin` | - | 猫保護バリエーション | 回転しながら登場 |
 | `catJump` | - | 猫保護バリエーション | ジャンプして登場 |
+
+---
+
+## 15. アンビエント・グラスUIアニメ（v3.1 追加）
+
+### トリガー: ゲーム画面の常時演出
+
+| 名前 | 時間 | 対象 | 内容 |
+|------|------|------|------|
+| `ambientDrift` | 28〜52s linear infinite | 背景ブロブ（5個） | `translate3d(-10%→110%, 0, 0)` で水平に流れる |
+| `ambientFloat` | 6〜10s ease-in-out infinite | 背景ブロブ | `translateY(0↔-12px) + scale(1↔1.04)` の上下浮遊 |
+| `gaugeGlowPulse` | 1.6s ease-in-out infinite | スキルゲージ猫アイコン | 100%時に `box-shadow` のグロー強弱 |
+| `gaugeReadyBurst` | 単発（予約） | スキルゲージ | 0→1.4→2.0倍にスケールしフェード |
+| `panelSheen` | 2.4s ease-in-out infinite | スキルゲージパネル | 100%時に半透明白の斜めシーンが横切る |
+| `cellRipple` | 0.5s ease-out forwards | セルタップ | タップ位置から放射状の波紋 (radial-gradient) |
+| `cellLift` | 単発（予約） | セルホバー | `translateY(0→-2px)` の浮き上がり |
+| `breakdownRowIn` | 0.32s ease-out (×0.04i stagger) | クリアパネルの行 | 各行を 40ms ずらしで `translateX(-10px→0)+opacity` |
+
+### 設計意図
+
+- **アンビエント**: 背景の単調さを解消し、グラスUIの透けを引き立てる。`pointerEvents: none` & `zIndex: 0` で操作を阻害しない
+- **gaugeGlowPulse / panelSheen**: ゲージ満タン時の発動可能状態を視覚的に強調
+- **cellRipple**: タッチフィードバックを Material Design 風に。`pointer-events: none` で誤動作なし
+- **breakdownRowIn**: スコア内訳をカスケード表示することで、達成感を演出
+
+### モバイル配慮
+
+- `ambientDrift` と `ambientFloat` は `transform` のみ使用（reflow なし）
+- `backdrop-filter` は Safari/iOS Chrome 互換のため `WebkitBackdropFilter` も併記
+- `cellRipple` は最大 1 セルあたり数個までに自動消滅（500ms で removal）
 
 ---
 

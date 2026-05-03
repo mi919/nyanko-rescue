@@ -1,7 +1,7 @@
 # 🐱 にゃんこレスキュー UI仕様書
 
-**バージョン:** 2.1
-**最終更新:** 2026/04/19
+**バージョン:** 2.2
+**最終更新:** 2026/05/03
 
 ---
 
@@ -19,16 +19,37 @@ font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif
 const cellSize = 38; // px、全ステージ共通
 ```
 
-### 1-3. 共通カラー
+### 1-3. 共通カラー（v2.2: パステル基調に統一）
 
 | 用途 | HEX | 備考 |
 |------|-----|------|
 | 文字（メイン） | #37474f | ダークグレー |
-| 文字（サブ） | #666 / #888 | グレー系 |
-| 背景（白系） | rgba(255,255,255,0.85) | 半透明カード |
-| 成功・猫 | #43a047 | 緑 |
-| 危険・犬 | #e53935 | 赤 |
-| アクセント | #ffa726 | オレンジ |
+| 文字（サブ） | #78909c | スレートグレー |
+| 背景（白系） | rgba(255,255,255,0.45)〜0.6 | グラス半透明（backdrop-filter併用） |
+| 成功・猫（背景） | #a5d6a7 / 縁: #c8e6c9 / 背景: #e8f5e9 | パステルグリーン |
+| 成功・猫（数字） | #66bb6a | 視認性のためやや高彩度 |
+| 危険・犬（背景） | #f48a8a / 縁: #f4b6b6 / 背景: #ffe3e3 | パステル赤 |
+| 危険・犬（数字） | #e57373 | 視認性のためやや高彩度 |
+| アクセント | #ffa726 | オレンジ（フラグ・100%ゲージ等） |
+| セルベース | hi: #fafbfd / lo: #d6dde6 | ネオモーフィズム凸用グラデ |
+
+### 1-3b. グラスモーフィズムトークン (v2.2 新設)
+
+`src/constants/theme.ts` の `glass` オブジェクトに集約:
+
+| トークン | 値 |
+|---------|-----|
+| `glass.bg` | `rgba(255,255,255,0.45)` |
+| `glass.bgStrong` | `rgba(255,255,255,0.6)`（盤面コンテナ用） |
+| `glass.bgFlag` | `rgba(255,236,179,0.5)`（フラグモード時の盤面） |
+| `glass.border` | `1px solid rgba(255,255,255,0.7)` |
+| `glass.borderFlag` | `1px solid rgba(255,193,7,0.65)` |
+| `glass.blur` | `blur(14px) saturate(140%)` |
+| `glass.blurStrong` | `blur(18px) saturate(160%)`（盤面用） |
+| `glass.shadow` | `0 8px 32px rgba(120,144,156,0.18), inset 0 1px 0 rgba(255,255,255,0.65)` |
+| `glass.shadowFlag` | `0 8px 32px rgba(255,167,38,0.28), inset 0 1px 0 rgba(255,255,255,0.7), 0 0 0 2px rgba(255,193,7,0.5)` |
+
+互換性のため `WebkitBackdropFilter` も併記する（iOS Safari 対応）。
 
 ### 1-4. レスポンシブ
 
@@ -180,12 +201,16 @@ textAlign: center, fontSize: 16, fontWeight: 700
 内容: "${emoji} ステージ ${idx+1}: ${name}"
 ```
 
-### 3-3. ステータスバー
+### 3-3. ステータスバー（v2.2: グラス化）
 
 ```
 display: flex, gap: 12, alignItems: center, flexWrap: wrap, justifyContent: center
-background: rgba(255,255,255,0.85), borderRadius: 12
-padding: 6px 14px, fontSize: 14, fontWeight: 600
+background: glass.bg
+backdropFilter: glass.blur (Webkit併記)
+border: glass.border
+borderRadius: 16, padding: 8px 16px
+boxShadow: glass.shadow
+fontSize: 14, fontWeight: 600, color: palette.textMain
 ```
 
 内容:
@@ -208,72 +233,105 @@ padding: 6px 14px, fontSize: 14, fontWeight: 600
 
 全て: padding 2px 8px, borderRadius 10, fontSize 11, fontWeight 800, animation: skillPulse
 
-### 3-5. スキルゲージバー
+### 3-5. スキルゲージバー（v2.2: グラス化＋シーン演出）
 
 ```
-display: flex, gap: 8, alignItems: center
-background: rgba(255,255,255,0.85), borderRadius: 12
-padding: 6px 10px, maxWidth: 360px
+position: relative, overflow: hidden
+display: flex, gap: 10, alignItems: center
+background: glass.bg
+backdropFilter: glass.blur (Webkit併記)
+border: glass.border
+borderRadius: 16, padding: 8px 12px, maxWidth: 360px
+boxShadow: glass.shadow
 ```
 
-左: 猫スプライト（36px円形、スキル色ボーダー）
-中: スキル名 + パーセント + プログレスバー（高さ8px）
-右: 発動/中止ボタン
+左: 猫スプライト（38px円形、`radial-gradient(circle, ${skill.color}33 0%, ${skill.color}11 100%)` 背景＋スキル色2pxボーダー＋内ハイライト）
+- 100%時: `gaugeGlowPulse 1.6s ease-in-out infinite` でグロー強弱
+
+中: スキル名 + パーセント + プログレスバー
+- バー高さ: 10px、背景: `rgba(176,190,197,0.25)` ＋ 内影で凹み感
+- 上部に半透明白のグロッシーハイライト（高さ45%）を重ねる
+- transition: `width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)` でぷるん感
+
+右: 発動/中止ボタン（既存のまま）
+
+**100%到達時の追加演出 (v2.2):**
+- パネル全体に `panelSheen 2.4s ease-in-out infinite` の斜め白シーン
 
 **ゲージバーの色変化:**
-- 0〜99%: `linear-gradient(90deg, #b0bec5, ${skill.color})`
-- 100%: `linear-gradient(90deg, #ffd54f, #ffa726, #ff7043)` + `gaugeShimmer` アニメ
+- 0〜99%: `linear-gradient(90deg, #cfd8dc, ${skill.color})`
+- 100%: `linear-gradient(90deg, #ffd54f, #ffa726, #ff7043)` + `gaugeShimmer`
 
-**発動ボタン:**
-- 通常: スキル色グラデ、`skillPulse` アニメ（100%時のみ）
-- cross選択中: 赤グラデ、テキスト「中止」
-- ゲージ不足: #ccc、disabled
-
-### 3-6. 盤面
+### 3-6. 盤面（v2.2: グラス化）
 
 ```
 display: grid
 gridTemplateColumns: repeat(cols, 38px)
-gap: 3, padding: 8
-background: flagMode ? rgba(255,224,130,0.85) : rgba(255,255,255,0.6)
-borderRadius: 12
-boxShadow: flagMode ? 0 0 0 3px #ffa726 + glow : 0 4px 20px rgba(0,0,0,0.08)
-animation: dogAttack ? attackShake 0.6s : none
+gap: 4, padding: 12
+background: flagMode ? glass.bgFlag : glass.bgStrong
+backdropFilter: glass.blurStrong (Webkit併記)
+border: flagMode ? glass.borderFlag : glass.border
+borderRadius: 18
+boxShadow: flagMode ? glass.shadowFlag : glass.shadow
+transition: background/box-shadow/border 0.25s ease
+animation: dogAttack ? attackShake 0.6s : (hint中 ? boardFadeIn : none)
 ```
+
+### 3-6b. 背景アンビエントレイヤー (v2.2 新設)
+
+`GameScreen` のルート直下に絶対配置する非干渉レイヤー:
+
+```
+position: absolute, inset: 0, pointerEvents: none, zIndex: 0
+内部に5個のブロブ <div>:
+  - サイズ: 140〜260px
+  - top: 10〜74%
+  - background: radial-gradient(circle, hsla(hue, 70%, 80%, 0.55) 0%, transparent 70%)
+  - filter: blur(8px)
+  - animation: ambientDrift (28〜52s linear infinite) + ambientFloat (6〜10s ease-in-out infinite)
+```
+
+UI本体は `position: relative; zIndex: 1` のラッパーで前面に配置。
 
 ### 3-7. セル（Cell コンポーネント）
 
-#### 未開封セル
+#### 未開封セル（v2.2: ネオモーフィズム＋パステル化）
 
-| 状態 | 背景 | ボーダー | アニメ | アイコン |
-|------|------|---------|--------|---------|
-| 通常 | linear-gradient(145deg, #b0bec5, #90a4ae) | #78909c | - | - |
-| フラグ済み | #fff9c4 | #78909c | - | 🚩 |
-| 透視中（犬） | linear-gradient(145deg, #ef5350, #c62828) | #b71c1c | peekPulse | 🐕 |
-| マーク中（猫） | linear-gradient(145deg, #81c784, #43a047) | #2e7d32 | markPulse | 🎯 |
-| 予知選択中 | linear-gradient(145deg, #ce93d8, #ab47bc) | #6a1b9a | peekPulse | 🔮 |
-| 予知プレビュー | linear-gradient(145deg, #b39ddb, #7e57c2) | #4527a0 | markPulse | 内容表示 |
-| じゅうじ選択中 | linear-gradient(145deg, #ffb74d, #fb8c00) | #e65100 | crossPulse | ✨ |
+| 状態 | 背景 | ボーダー | シャドウ | アニメ | アイコン |
+|------|------|---------|---------|--------|---------|
+| 通常 | linear-gradient(145deg, #fafbfd, #d6dde6) | transparent | 外凸＋内ハイ（NEU_REST_SHADOW） | - | - |
+| 通常（押下中） | 同上 | 同上 | NEU_PRESSED_SHADOW（内凹） | scale(0.94) | - |
+| フラグ済み | linear-gradient(145deg, #fff9c4, #fff59d) | transparent | 内ハイ＋#ffd54f淡影 | - | 🚩 |
+| 透視中（犬） | linear-gradient(145deg, #ffcdd2, #ef9a9a) | #e57373 | 内ハイ＋#ef9a9aグロー | peekPulse | 🐕 |
+| マーク中（猫） | linear-gradient(145deg, #c8e6c9, #a5d6a7) | #81c784 | 内ハイ＋#a5d6a7グロー | markPulse | 🎯 |
+| 予知選択中 | linear-gradient(145deg, #e1bee7, #ce93d8) | #ba68c8 | 内ハイ＋#ce93d8グロー | peekPulse | 🔮 |
+| 予知プレビュー | linear-gradient(145deg, #d1c4e9, #b39ddb) | #9575cd | 内ハイ＋強グロー | markPulse | 内容表示 |
+| じゅうじ選択中 | linear-gradient(145deg, #ffe0b2, #ffcc80) | #ffb74d | 内ハイ＋#ffcc80グロー | crossPulse | ✨ |
+
+**NEU_REST_SHADOW**: `6px 6px 12px rgba(176,190,197,0.45), -4px -4px 10px rgba(255,255,255,0.85), inset 1px 1px 2px rgba(255,255,255,0.6)`
+**NEU_PRESSED_SHADOW**: `inset 4px 4px 8px rgba(120,144,156,0.35), inset -2px -2px 6px rgba(255,255,255,0.6)`
 
 全セル共通:
 - width/height: 38px
-- borderRadius: 6
+- borderRadius: 6（rounded-md）
 - cursor: pointer
-- タッチフィードバック: onMouseDown → scale(0.92)
+- タッチフィードバック: 押下中は state で scale(0.94) ＋ シャドウ凹切り替え
+- タップ時: クリック位置から `cellRipple 0.5s` の白い波紋（最大1セル数個まで自動消滅）
 
-#### 開封済みセル
+#### 開封済みセル（v2.2: パステル化）
 
-| 状態 | 背景 | 内容表示 |
-|------|------|---------|
-| 空マス（0/0） | #f5f5f5 | なし |
-| 数字マス | #f5f5f5 | 赤数字(犬)/緑数字(猫) |
-| 犬マス | #ffcdd2 | Sprite(dog, 32) |
-| 猫マス | #c8e6c9 | Sprite(cat, 32) |
+| 状態 | 背景 | ボーダー | シャドウ | 内容表示 |
+|------|------|---------|---------|---------|
+| 空マス（0/0） | linear-gradient(145deg, #fafbfd, #e6ecf2) | #dde4ec | 内凹（数字マスと共通） | なし |
+| 数字マス | 同上 | #dde4ec | 内凹（凹み感） | 赤数字(#e57373)/緑数字(#66bb6a) |
+| 犬マス | linear-gradient(145deg, #ffe3e3, #fbcfcf) | #f4b6b6 | 内ハイ＋#f48a8a淡影 | Sprite(dog, 32) |
+| 猫マス | linear-gradient(145deg, #e8f5e9, #d6ead8) | #c8e6c9 | 内ハイ＋#a5d6a7淡影 | Sprite(cat, 32) |
 
 数字表示: `${dogCount} / ${catCount}` 形式
-- dogCount: color #e53935, fontWeight 700
-- catCount: color #43a047, fontWeight 700
-- fontSize: 11
+- dogCount: color #e57373, fontWeight 800
+- catCount: color #66bb6a, fontWeight 800
+- 区切り `/`: color #b0bec5
+- fontSize: 13
 
 ### 3-8. トースト
 
