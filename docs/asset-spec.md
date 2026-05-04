@@ -20,6 +20,17 @@
 | `main.png` | JPEG（拡張子はpng） | 1148×1064px | `BG_URL` | 配置済み |
 | `title.png` | JPEG（拡張子はpng） | 1568×560px | `LOGO_URL` | 配置済み |
 
+`src/assets/stages/` ディレクトリ（ステージ背景画像、`STAGES[].bgImage` 経由で参照）:
+
+| ファイル名 | 形式 | 実寸 | サイズ | 状態 |
+|-----------|------|------|-------|------|
+| `stage_niwa.jpg` | JPEG q=82 | 948×1659px | 197 KB | 配置済み |
+| `stage_kouen.jpg` | JPEG q=82 | 948×1659px | 186 KB | 配置済み |
+| `stage_shouten.jpg` | JPEG q=82 | 948×1659px | 236 KB | 配置済み |
+| `stage_haikyo.jpg` | JPEG q=82 | 948×1659px | 227 KB | 配置済み |
+
+> 詳細仕様は [`stage-bg-spec.md`](./stage-bg-spec.md) を参照。
+
 未配置のアセット（プロトタイプではbase64埋め込み）:
 
 | 対応定数 | 状態 |
