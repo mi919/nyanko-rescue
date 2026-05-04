@@ -381,7 +381,12 @@ export const STAGE_BG_URLS: Record<string, string> = {
 6. **import 追加** — `src/constants/stages.ts` に `bgImage` フィールド追加
 7. **動作確認** — 4 ステージとも盤面の数字が読めることをチェック
 
-### 8-1. AIプロンプトテンプレート（参考）
+### 8-1. AIプロンプトテンプレート
+
+各ステージ別の **完全なプロンプト** は別仕様書 [`stage-bg-prompts.md`](./stage-bg-prompts.md) に集約。
+英語版（Midjourney / DALL-E 3 用）と日本語版（NovelAI 用）、ネガティブプロンプト、ツール別チューニングを掲載。
+
+簡易テンプレート:
 
 ```
 "Soft pastel anime illustration, [SCENE], [TIME OF DAY], no characters in the center,
