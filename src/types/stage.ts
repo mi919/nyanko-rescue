@@ -6,5 +6,6 @@ export type Stage = {
   dogs: number;
   cats: number;
   bg: string;
+  bgImage?: string;
   mult: number;
 };

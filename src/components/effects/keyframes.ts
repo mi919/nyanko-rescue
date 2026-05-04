@@ -290,4 +290,8 @@ export const ALL_KEYFRAMES = `
     0%   { transform: translateX(-120%) skewX(-20deg); }
     100% { transform: translateX(220%) skewX(-20deg); }
   }
+  @keyframes bgFadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
 `;

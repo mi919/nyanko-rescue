@@ -578,6 +578,27 @@ export function GameScreen() {
       overflow: "hidden",
     }}>
 
+      {stage.bgImage && (
+        <div
+          key={stageIdx}
+          style={{
+            position: "absolute", inset: 0, zIndex: 0,
+            pointerEvents: "none",
+            backgroundImage: `url(${stage.bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+            backgroundRepeat: "no-repeat",
+            backgroundColor: stage.bg,
+            animation: "bgFadeIn 0.5s ease-out both",
+          }}
+        >
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 30%, rgba(255,255,255,0.45) 70%, rgba(255,255,255,0) 100%)",
+          }} />
+        </div>
+      )}
+
       {/* Ambient drifting blobs (背景アンビエント) */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
