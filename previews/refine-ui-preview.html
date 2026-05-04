@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>にゃんこレスキュー — UI 方向性プレビュー (v2.2)</title>
+<style>
+  :root {
+    --textMain: #37474f;
+    --textSub: #78909c;
+    --dog: #f48a8a;
+    --dogBorder: #f4b6b6;
+    --dogBg: #ffe3e3;
+    --dogText: #e57373;
+    --cat: #a5d6a7;
+    --catBorder: #c8e6c9;
+    --catBg: #e8f5e9;
+    --catText: #66bb6a;
+    --cellHi: #fafbfd;
+    --cellLo: #d6dde6;
+
+    --glassBg: rgba(255,255,255,0.45);
+    --glassBgStrong: rgba(255,255,255,0.6);
+    --glassBgFlag: rgba(255,236,179,0.5);
+    --glassBorder: 1px solid rgba(255,255,255,0.7);
+    --glassBorderFlag: 1px solid rgba(255,193,7,0.65);
+    --glassBlur: blur(14px) saturate(140%);
+    --glassBlurStrong: blur(18px) saturate(160%);
+    --glassShadow: 0 8px 32px rgba(120,144,156,0.18), inset 0 1px 0 rgba(255,255,255,0.65);
+    --glassShadowFlag: 0 8px 32px rgba(255,167,38,0.28), inset 0 1px 0 rgba(255,255,255,0.7), 0 0 0 2px rgba(255,193,7,0.5);
+
+    --neuRest: 6px 6px 12px rgba(176,190,197,0.45), -4px -4px 10px rgba(255,255,255,0.85), inset 1px 1px 2px rgba(255,255,255,0.6);
+    --neuPressed: inset 4px 4px 8px rgba(120,144,156,0.35), inset -2px -2px 6px rgba(255,255,255,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+    color: var(--textMain);
+    background: linear-gradient(180deg, #b3e5fc 0%, #c8e6c9 60%, #dcedc8 100%);
+    min-height: 100vh;
+  }
+
+  /* ─── Toggles & header ───────────────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border-bottom: 1px solid rgba(255,255,255,0.7);
+  }
+  .topbar h1 {
+    margin: 0; font-size: 15px; font-weight: 800; color: var(--textMain);
+  }
+  .topbar small { color: var(--textSub); font-size: 11px; }
+  .topbar .seg {
+    display: inline-flex; gap: 4px; padding: 3px;
+    background: rgba(255,255,255,0.55); border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.7);
+  }
+  .topbar .seg button {
+    border: 0; background: transparent; padding: 6px 12px;
+    border-radius: 9px; font-size: 12px; font-weight: 700;
+    color: var(--textSub); cursor: pointer;
+  }
+  .topbar .seg button.active {
+    background: linear-gradient(135deg, #ffb74d, #ff8a65); color: #fff;
+    box-shadow: 0 2px 6px rgba(255,138,101,0.5);
+  }
+
+  /* ─── Stage scenes ───────────────────────────────── */
+  .scene {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    display: none;
+    padding: 16px 8px 32px;
+  }
+  .scene.active { display: flex; flex-direction: column; align-items: center; }
+  .scene[data-stage="niwa"]      { background: linear-gradient(180deg, #e8f5e9 0%, #fafafa 100%); }
+  .scene[data-stage="kouen"]     { background: linear-gradient(180deg, #e3f2fd 0%, #fafafa 100%); }
+  .scene[data-stage="shouten"]   { background: linear-gradient(180deg, #fff3e0 0%, #fafafa 100%); }
+  .scene[data-stage="haikyo"]    { background: linear-gradient(180deg, #efebe9 0%, #fafafa 100%); }
+
+  /* ─── Ambient blobs ───────────────────────────────── */
+  .ambient {
+    position: absolute; inset: 0; pointer-events: none;
+    overflow: hidden; z-index: 0;
+  }
+  .blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(8px); will-change: transform;
+  }
+  @keyframes ambientDrift {
+    0%   { transform: translate3d(-10%, 0, 0); }
+    100% { transform: translate3d(110%, 0, 0); }
+  }
+  @keyframes ambientFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-12px) scale(1.04); }
+  }
+
+  /* ─── Wrapper for content above ambient ──────────── */
+  .stack { position: relative; z-index: 1; width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+
+  /* ─── Stage header ───────────────────────────────── */
+  .stage-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .stage-header span.emoji {
+    font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  }
+  .stage-header h2 {
+    font-size: 18px; font-weight: 800; margin: 0;
+    color: var(--textMain); letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  }
+
+  /* ─── Glass status bar ───────────────────────────── */
+  .status-bar {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 10px;
+    background: var(--glassBg);
+    backdrop-filter: var(--glassBlur);
+    -webkit-backdrop-filter: var(--glassBlur);
+    border: var(--glassBorder);
+    border-radius: 16px; padding: 8px 16px;
+    box-shadow: var(--glassShadow);
+    font-size: 14px; font-weight: 600; color: var(--textMain);
+  }
+  .badge {
+    padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 800;
+    animation: skillPulse 1.5s ease-in-out infinite;
+  }
+  .badge.lucky { background: #c8e6c9; color: #2e7d32; }
+  .badge.barrier { background: #cfd8dc; color: #37474f; }
+  .badge.foresee { background: #e1bee7; color: #4a148c; }
+  .badge.cross { background: #ffe0b2; color: #bf360c; }
+  @keyframes skillPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .flag-btn, .book-btn {
+    border: 0; cursor: pointer;
+    padding: 4px 12px; border-radius: 16px;
+    font-size: 12px; font-weight: 800;
+  }
+  .flag-btn { background: linear-gradient(135deg, #ffd54f, #ffa726); color: #fff;
+    border: 2px solid #f57c00;
+    box-shadow: 0 2px 6px rgba(245,124,0,0.4);
+  }
+  .flag-btn.off { background: #fff; color: #666; border: 2px solid #ccc; box-shadow: none; }
+  .book-btn { background: rgba(255,255,255,0.6); color: var(--textSub); border: 1px solid rgba(255,255,255,0.8); padding: 2px 10px; border-radius: 10px; }
+
+  /* ─── Glass skill gauge ──────────────────────────── */
+  .skill-gauge {
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--glassBg);
+    backdrop-filter: var(--glassBlur);
+    -webkit-backdrop-filter: var(--glassBlur);
+    border: var(--glassBorder);
+    border-radius: 16px; padding: 8px 12px;
+    box-shadow: var(--glassShadow);
+    max-width: 360px; width: 100%;
+    margin-bottom: 10px;
+  }
+  .skill-gauge .sheen {
+    position: absolute; inset: 0; width: 40%; pointer-events: none;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+    animation: panelSheen 2.4s ease-in-out infinite;
+  }
+  @keyframes panelSheen {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
+  }
+  .skill-icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    background: radial-gradient(circle, #ec407a33 0%, #ec407a11 100%);
+    border: 2px solid #ec407a;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.6), 0 2px 6px #ec407a40;
+    animation: gaugeGlowPulse 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes gaugeGlowPulse {
+    0%, 100% { box-shadow: inset 1px 1px 2px rgba(255,255,255,0.6), 0 0 0 rgba(255,167,38,0); }
+    50%      { box-shadow: inset 1px 1px 2px rgba(255,255,255,0.6), 0 0 14px rgba(255,167,38,0.55); }
+  }
+  .skill-text { flex: 1; min-width: 0; }
+  .skill-text .label { font-size: 10px; font-weight: 800; color: var(--textSub); display: flex; justify-content: space-between; letter-spacing: 0.04em; }
+  .skill-text .label .pct { color: #ff7043; }
+  .gauge-bar {
+    position: relative; height: 10px; background: rgba(176,190,197,0.25);
+    border-radius: 6px; overflow: hidden; margin-top: 3px;
+    box-shadow: inset 0 1px 3px rgba(120,144,156,0.35), inset 0 -1px 1px rgba(255,255,255,0.6);
+  }
+  .gauge-fill {
+    width: 100%; height: 100%; border-radius: 6px;
+    background: linear-gradient(90deg, #ffd54f, #ffa726, #ff7043);
+    box-shadow: 0 0 10px #ec407a;
+    animation: gaugeShimmer 1.5s ease-in-out infinite;
+  }
+  .gauge-fill.partial {
+    width: 64%;
+    background: linear-gradient(90deg, #cfd8dc, #ec407a);
+    box-shadow: 0 0 4px #ec407a40; animation: none;
+  }
+  @keyframes gaugeShimmer {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+  }
+  .gauge-gloss {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 45%; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0));
+    border-radius: 6px 6px 0 0;
+  }
+  .skill-act {
+    flex-shrink: 0; padding: 6px 14px; border-radius: 16px;
+    font-size: 12px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #ec407a, #ec407acc);
+    border: 2px solid #fff; cursor: pointer;
+    box-shadow: 0 3px 8px #ec407a66;
+    animation: skillPulse 1.2s ease-in-out infinite;
+  }
+
+  /* ─── Glass board + neumorphism cells ─────────────── */
+  .board {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(8, 38px);
+    gap: 4px; padding: 12px;
+    background: var(--glassBgStrong);
+    backdrop-filter: var(--glassBlurStrong);
+    -webkit-backdrop-filter: var(--glassBlurStrong);
+    border: var(--glassBorder);
+    border-radius: 18px;
+    box-shadow: var(--glassShadow);
+    margin-bottom: 10px;
+    transition: background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .board.flag-mode {
+    background: var(--glassBgFlag);
+    border: var(--glassBorderFlag);
+    box-shadow: var(--glassShadowFlag);
+  }
+  .cell {
+    position: relative; overflow: hidden;
+    width: 38px; height: 38px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; user-select: none;
+    border: 1px solid transparent;
+    transition: transform 0.12s ease, box-shadow 0.18s ease;
+    background: linear-gradient(145deg, var(--cellHi), var(--cellLo));
+    box-shadow: var(--neuRest);
+  }
+  .cell:active { transform: scale(0.94); box-shadow: var(--neuPressed); }
+  .cell.flagged { background: linear-gradient(145deg, #fff9c4, #fff59d); box-shadow: inset 2px 2px 4px rgba(255,255,255,0.6), 2px 2px 6px rgba(255,213,79,0.45); }
+  .cell.peek { background: linear-gradient(145deg, #ffcdd2, #ef9a9a); border-color: #e57373; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 12px rgba(239,154,154,0.85); animation: pulseSoft 1s ease-in-out infinite; }
+  .cell.mark { background: linear-gradient(145deg, #c8e6c9, #a5d6a7); border-color: #81c784; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 12px rgba(165,214,167,0.95); animation: pulseSoft 1s ease-in-out infinite; }
+  .cell.foresee { background: linear-gradient(145deg, #e1bee7, #ce93d8); border-color: #ba68c8; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 10px rgba(206,147,216,0.7); animation: pulseSoft 1.2s ease-in-out infinite; }
+  .cell.cross { background: linear-gradient(145deg, #ffe0b2, #ffcc80); border-color: #ffb74d; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 10px rgba(255,204,128,0.85); animation: pulseSoft 1s ease-in-out infinite; }
+  .cell.preview { background: linear-gradient(145deg, #d1c4e9, #b39ddb); border-color: #9575cd; color: #fff; font-weight: 800; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 0 0 16px rgba(149,117,205,0.7); animation: pulseSoft 0.8s ease-in-out infinite; font-size: 12px; }
+  @keyframes pulseSoft {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.08); }
+  }
+  /* Revealed states */
+  .cell.empty {
+    background: linear-gradient(145deg, #fafbfd, #e6ecf2);
+    border-color: #dde4ec;
+    box-shadow: inset 2px 2px 5px rgba(176,190,197,0.35), inset -2px -2px 4px rgba(255,255,255,0.85);
+  }
+  .cell.num {
+    background: linear-gradient(145deg, #fafbfd, #e6ecf2);
+    border-color: #dde4ec;
+    box-shadow: inset 2px 2px 5px rgba(176,190,197,0.35), inset -2px -2px 4px rgba(255,255,255,0.85);
+    font-size: 13px; font-weight: 800; gap: 2px;
+  }
+  .cell.num .d { color: var(--dogText); }
+  .cell.num .s { color: #b0bec5; }
+  .cell.num .c { color: var(--catText); }
+  .cell.dog {
+    background: linear-gradient(145deg, var(--dogBg), #fbcfcf);
+    border-color: var(--dogBorder);
+    box-shadow: inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(244,138,138,0.25);
+    font-size: 24px;
+  }
+  .cell.cat {
+    background: linear-gradient(145deg, var(--catBg), #d6ead8);
+    border-color: var(--catBorder);
+    box-shadow: inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(165,214,167,0.3);
+    font-size: 24px;
+  }
+
+  /* Ripple */
+  .ripple {
+    position: absolute; left: 50%; top: 50%;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+    transform: translate(-50%,-50%) scale(0);
+    animation: cellRipple 0.5s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes cellRipple {
+    0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.55; }
+    100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+  }
+
+  /* Rescued list */
+  .rescued {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .rescued .chip {
+    background: var(--glassBgStrong);
+    backdrop-filter: var(--glassBlur); -webkit-backdrop-filter: var(--glassBlur);
+    border: var(--glassBorder);
+    border-radius: 14px; padding: 4px 12px;
+    box-shadow: 0 4px 12px rgba(120,144,156,0.18), inset 0 1px 0 rgba(255,255,255,0.7);
+    font-size: 11px; display: flex; align-items: center; gap: 5px;
+    color: var(--textMain); font-weight: 700;
+    animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    0%{transform:scale(0)} 50%{transform:scale(1.3)} 100%{transform:scale(1)}
+  }
+
+  .footer-tip {
+    font-size: 11px; color: var(--textSub); text-align: center;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+  }
+
+  /* ─── Score breakdown demo ───────────────────────── */
+  .breakdown {
+    margin-top: 18px;
+    background: linear-gradient(135deg, #fff9c4, #ffe082);
+    border: 3px solid #fff; border-radius: 20px;
+    padding: 14px 18px; color: #bf360c;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    width: 100%; max-width: 360px;
+  }
+  .breakdown .title { font-size: 18px; font-weight: 900; text-align: center; margin-bottom: 6px; }
+  .breakdown .rows {
+    background: rgba(255,255,255,0.7); border-radius: 12px;
+    padding: 8px 12px; font-size: 11px; font-weight: 700;
+  }
+  .breakdown .row {
+    display: flex; justify-content: space-between; padding: 2px 0;
+    color: #5d4037; opacity: 0;
+    animation: breakdownRowIn 0.32s ease-out forwards;
+  }
+  .breakdown .row.hl { color: #d84315; font-weight: 800; }
+  @keyframes breakdownRowIn {
+    0%   { opacity: 0; transform: translateX(-10px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  .breakdown .total {
+    margin-top: 8px; padding: 8px 12px;
+    background: linear-gradient(135deg, #ff6f00, #e65100);
+    border-radius: 14px; color: #fff; font-weight: 900;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 2px solid #fff;
+  }
+  .breakdown .total .v { font-size: 22px; }
+
+  /* ─── Side info card ─────────────────────────────── */
+  .info {
+    margin: 24px auto 0; max-width: 440px; width: 92%;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: var(--glassBorder);
+    border-radius: 16px; padding: 12px 16px;
+    box-shadow: var(--glassShadow);
+    font-size: 12px; color: var(--textMain); line-height: 1.6;
+  }
+  .info b { color: #d84315; }
+  .info ul { margin: 6px 0 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>🐱 にゃんこレスキュー</h1>
+  <small>UI 方向性プレビュー v2.2 — グラスモーフィズム / パステル / リッチアニメ</small>
+  <div style="flex:1"></div>
+  <div class="seg" id="stageSeg">
+    <button class="active" data-stage="niwa">にわ</button>
+    <button data-stage="kouen">こうえん</button>
+    <button data-stage="shouten">しょうてんがい</button>
+    <button data-stage="haikyo">はいきょ</button>
+  </div>
+  <div class="seg" id="modeSeg">
+    <button class="active" data-mode="normal">通常</button>
+    <button data-mode="flag">フラグON</button>
+  </div>
+</header>
+
+<!-- Reusable scene template -->
+<template id="sceneTemplate">
+  <div class="ambient">
+    <div class="blob" style="top:8%;  width:200px; height:200px; background: radial-gradient(circle, hsla(200,70%,80%,0.55) 0%, transparent 70%); animation: ambientDrift 30s linear infinite, ambientFloat 6s ease-in-out infinite;"></div>
+    <div class="blob" style="top:24%; width:260px; height:260px; background: radial-gradient(circle, hsla(130,70%,80%,0.55) 0%, transparent 70%); animation: ambientDrift 38s linear -5s infinite, ambientFloat 7s ease-in-out infinite;"></div>
+    <div class="blob" style="top:42%; width:180px; height:180px; background: radial-gradient(circle, hsla(50,70%,80%,0.55) 0%, transparent 70%);  animation: ambientDrift 44s linear -10s infinite, ambientFloat 9s ease-in-out infinite;"></div>
+    <div class="blob" style="top:60%; width:220px; height:220px; background: radial-gradient(circle, hsla(320,70%,80%,0.55) 0%, transparent 70%); animation: ambientDrift 50s linear -15s infinite, ambientFloat 8s ease-in-out infinite;"></div>
+    <div class="blob" style="top:78%; width:160px; height:160px; background: radial-gradient(circle, hsla(280,70%,80%,0.55) 0%, transparent 70%); animation: ambientDrift 56s linear -20s infinite, ambientFloat 10s ease-in-out infinite;"></div>
+  </div>
+
+  <div class="stack">
+    <div class="stage-header">
+      <span class="emoji"></span>
+      <h2></h2>
+    </div>
+
+    <div class="status-bar">
+      <span>❤️ ♥♥♡</span>
+      <span>🐱 2/4</span>
+      <span>⭐ 1240</span>
+      <span class="badge lucky">🍀 バリア</span>
+      <span class="badge barrier">🛡 3s</span>
+      <span class="badge foresee">🔮 2</span>
+      <span class="badge cross">✨ 選択中</span>
+      <button class="flag-btn">🚩 フラグON</button>
+      <button class="book-btn">図鑑 6</button>
+    </div>
+
+    <div class="skill-gauge">
+      <div class="sheen"></div>
+      <div class="skill-icon">🐱</div>
+      <div class="skill-text">
+        <div class="label"><span>❤️ ヒーリング</span><span class="pct">100%</span></div>
+        <div class="gauge-bar">
+          <div class="gauge-fill"></div>
+          <div class="gauge-gloss"></div>
+        </div>
+      </div>
+      <button class="skill-act">発動</button>
+    </div>
+
+    <div class="board">
+      <!-- Row 1 -->
+      <div class="cell"></div>
+      <div class="cell flagged">🚩</div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="d">1</span></div>
+      <div class="cell num"><span class="d">2</span><span class="s">/</span><span class="c">1</span></div>
+      <div class="cell"></div>
+      <div class="cell peek">🐕</div>
+      <div class="cell"></div>
+
+      <!-- Row 2 -->
+      <div class="cell"></div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="c">2</span></div>
+      <div class="cell cat">🐱</div>
+      <div class="cell num"><span class="d">1</span><span class="s">/</span><span class="c">1</span></div>
+      <div class="cell mark">🎯</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- Row 3 -->
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="c">1</span></div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="d">2</span></div>
+      <div class="cell dog">🐕</div>
+      <div class="cell num"><span class="d">2</span><span class="s">/</span><span class="c">1</span></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- Row 4 -->
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="d">1</span></div>
+      <div class="cell foresee">🔮</div>
+      <div class="cell preview">2/1</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- Row 5 -->
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="c">1</span></div>
+      <div class="cell cat">🐱</div>
+      <div class="cell num"><span class="d">2</span><span class="s">/</span><span class="c">1</span></div>
+      <div class="cell cross">✨</div>
+      <div class="cell cross">✨</div>
+      <div class="cell"></div>
+
+      <!-- Row 6 -->
+      <div class="cell"></div>
+      <div class="cell num"><span class="d">1</span></div>
+      <div class="cell empty"></div>
+      <div class="cell num"><span class="d">2</span><span class="s">/</span><span class="c">1</span></div>
+      <div class="cell cross">✨</div>
+      <div class="cell cross">✨</div>
+      <div class="cell cross">✨</div>
+      <div class="cell"></div>
+
+      <!-- Row 7 -->
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell num"><span class="d">1</span></div>
+      <div class="cell"></div>
+      <div class="cell cross">✨</div>
+      <div class="cell"></div>
+      <div class="cell flagged">🚩</div>
+      <div class="cell"></div>
+
+      <!-- Row 8 -->
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+    </div>
+
+    <div class="rescued">
+      <span class="chip">🐱 みけ</span>
+      <span class="chip">🐱 とら</span>
+    </div>
+
+    <div class="footer-tip">🚩 フラグモード：タップで旗を立てる/外す</div>
+
+    <div class="breakdown">
+      <div class="title">★ パーフェクト！ ★</div>
+      <div class="rows" id="breakdownRows">
+        <div class="row" style="animation-delay:0.00s"><span>🐱 ねこを保護 ×4</span><span>+400</span></div>
+        <div class="row" style="animation-delay:0.04s"><span>🔓 マス開封 ×28</span><span>+140</span></div>
+        <div class="row" style="animation-delay:0.08s"><span>🔢 数字マス開封 ×4</span><span>+40</span></div>
+        <div class="row" style="animation-delay:0.12s"><span>✨ クリアボーナス</span><span>+200</span></div>
+        <div class="row" style="animation-delay:0.16s"><span>❤️ ライフボーナス ×3</span><span>+150</span></div>
+        <div class="row hl" style="animation-delay:0.20s"><span>★ パーフェクト</span><span>+300</span></div>
+        <div class="row hl" style="animation-delay:0.24s"><span>⚡ スピードクリア (42.3秒)</span><span>+150</span></div>
+        <div class="row hl" style="animation-delay:0.28s"><span>🛡 無傷クリア</span><span>+200</span></div>
+      </div>
+      <div class="total"><span>合計</span><span class="v">1580</span></div>
+    </div>
+  </div>
+</template>
+
+<main>
+  <section class="scene active" data-stage="niwa"></section>
+  <section class="scene" data-stage="kouen"></section>
+  <section class="scene" data-stage="shouten"></section>
+  <section class="scene" data-stage="haikyo"></section>
+</main>
+
+<div class="info">
+  <b>このプレビューでわかること:</b>
+  <ul>
+    <li><b>グラス化</b>: ステータスバー / スキルゲージ / 盤面コンテナ — 背景の色が透けて見える</li>
+    <li><b>パステル化</b>: 犬・猫マスとセル背景。数字 (1, 2/1 …) は視認性のため彩度を残している</li>
+    <li><b>ネオモーフィズム</b>: 未開封セルの柔らかい凸影、押下で凹影に切り替え (タップ確認可)</li>
+    <li><b>背景アンビエント</b>: 5 つのカラーブロブが横にゆっくり流れて上下にも揺れる</li>
+    <li><b>スキルゲージ100%演出</b>: 斜め白シーン / 猫アイコンのグロー強弱 / カラーグラデーション</li>
+    <li><b>スコアブレイクダウン</b>: 行が左から 40ms ずつカスケードイン</li>
+  </ul>
+  ステージ切り替えで背景色が変わり、それに応じてグラスの透け方も変化します。
+</div>
+
+<script>
+  // Populate scenes from template
+  const tpl = document.getElementById('sceneTemplate');
+  const stageMeta = {
+    niwa:    { emoji: '🌿', label: 'ステージ 1: にわ' },
+    kouen:   { emoji: '🌳', label: 'ステージ 2: こうえん' },
+    shouten: { emoji: '🏪', label: 'ステージ 3: しょうてんがい' },
+    haikyo:  { emoji: '🏚️', label: 'ステージ 4: はいきょ' },
+  };
+  document.querySelectorAll('.scene').forEach(scene => {
+    const key = scene.dataset.stage;
+    scene.appendChild(tpl.content.cloneNode(true));
+    scene.querySelector('.stage-header .emoji').textContent = stageMeta[key].emoji;
+    scene.querySelector('.stage-header h2').textContent = stageMeta[key].label;
+  });
+
+  // Stage segmented control
+  document.querySelectorAll('#stageSeg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#stageSeg button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.scene').forEach(s => s.classList.toggle('active', s.dataset.stage === btn.dataset.stage));
+    });
+  });
+
+  // Flag-mode toggle (toggles board + button styles in all scenes)
+  document.querySelectorAll('#modeSeg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#modeSeg button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const flag = btn.dataset.mode === 'flag';
+      document.querySelectorAll('.board').forEach(b => b.classList.toggle('flag-mode', flag));
+      document.querySelectorAll('.flag-btn').forEach(b => {
+        b.classList.toggle('off', !flag);
+        b.textContent = flag ? '🚩 フラグON' : '🚩 フラグ';
+      });
+    });
+  });
+
+  // Cell ripple on click (demo of cellRipple keyframe)
+  document.addEventListener('click', e => {
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const rect = cell.getBoundingClientRect();
+    r.style.left = (e.clientX - rect.left) + 'px';
+    r.style.top = (e.clientY - rect.top) + 'px';
+    cell.appendChild(r);
+    setTimeout(() => r.remove(), 500);
+  });
+
+  // Replay breakdown animation when stage changes
+  function replayBreakdown() {
+    document.querySelectorAll('.breakdown .row').forEach(row => {
+      row.style.animation = 'none';
+      // force reflow
+      void row.offsetWidth;
+      row.style.animation = '';
+    });
+  }
+  document.querySelectorAll('#stageSeg button').forEach(btn => btn.addEventListener('click', replayBreakdown));
+</script>
+
+</body>
+</html>

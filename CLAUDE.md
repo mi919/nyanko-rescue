@@ -21,6 +21,7 @@
 | `ui-spec.md` | 全画面のレイアウト・配色・コンポーネント構成 |
 | `animation-spec.md` | 全51アニメーションのタイミング・キーフレーム |
 | `asset-spec.md` | 画像アセット仕様・スプライト座標・配色パレット |
+| `stage-bg-spec.md` | ゲーム画面の各ステージ背景画像の仕様 |
 | `skill-logic.md` | 全10スキルの発動ロジック・エッジケース |
 | `scoring-detail.md` | スコア計算フロー・ボーナス判定 |
 | `board-algorithm.md` | 盤面生成・フラッドフィル・レアリティ抽選 |

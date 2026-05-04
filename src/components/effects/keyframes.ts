@@ -256,4 +256,38 @@ export const ALL_KEYFRAMES = `
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
   }
+
+  @keyframes ambientDrift {
+    0%   { transform: translate3d(-10%, 0, 0); }
+    100% { transform: translate3d(110%, 0, 0); }
+  }
+  @keyframes ambientFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-12px) scale(1.04); }
+  }
+  @keyframes gaugeGlowPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(255,167,38,0); }
+    50%      { box-shadow: 0 0 14px rgba(255,167,38,0.55); }
+  }
+  @keyframes gaugeReadyBurst {
+    0%   { transform: scale(0.6); opacity: 0; }
+    40%  { transform: scale(1.4); opacity: 0.9; }
+    100% { transform: scale(2.0); opacity: 0; }
+  }
+  @keyframes cellRipple {
+    0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.55; }
+    100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0; }
+  }
+  @keyframes cellLift {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-2px); }
+  }
+  @keyframes breakdownRowIn {
+    0%   { opacity: 0; transform: translateX(-10px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes panelSheen {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
+  }
 `;
