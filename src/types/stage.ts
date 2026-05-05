@@ -1,6 +1,7 @@
 export type Stage = {
   name: string;
   emoji: string;
+  caption: string;
   rows: number;
   cols: number;
   dogs: number;

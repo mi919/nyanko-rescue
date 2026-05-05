@@ -1,7 +1,7 @@
 # 🐱 にゃんこレスキュー 状態管理アーキテクチャ仕様書
 
-**バージョン:** 3.0
-**最終更新:** 2026/04/26
+**バージョン:** 3.1
+**最終更新:** 2026/05/05
 
 ---
 
@@ -37,6 +37,7 @@ src/stores/
 | `debugMode` | `false` | boolean | デバッグメニュー表示 |
 | `logoTapCount` | `0` | number | ロゴタップ回数（デバッグモード起動用） |
 | `message` | `""` | string | トーストメッセージ |
+| `stageIntroPhase` | `"done"` | `"curtain"\|"showing"\|"exiting"\|"done"` | ステージ開始演出のフェーズ |
 
 ### 2-2. gameStore (`src/stores/gameStore.ts`)
 

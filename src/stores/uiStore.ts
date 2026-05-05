@@ -2,6 +2,8 @@ import { create } from "zustand";
 
 export type Screen = "title" | "game" | "roulette" | "ending";
 
+export type StageIntroPhase = "curtain" | "showing" | "exiting" | "done";
+
 type UiState = {
   screen: Screen;
   showRules: boolean;
@@ -10,6 +12,7 @@ type UiState = {
   debugMode: boolean;
   logoTapCount: number;
   message: string;
+  stageIntroPhase: StageIntroPhase;
 
   setScreen: (v: Screen) => void;
   setShowRules: (v: boolean | ((prev: boolean) => boolean)) => void;
@@ -18,6 +21,7 @@ type UiState = {
   setDebugMode: (v: boolean | ((prev: boolean) => boolean)) => void;
   setLogoTapCount: (v: number | ((prev: number) => number)) => void;
   setMessage: (v: string) => void;
+  setStageIntroPhase: (v: StageIntroPhase) => void;
 };
 
 const updater = <T>(prev: T, v: T | ((p: T) => T)): T =>
@@ -31,6 +35,7 @@ export const useUiStore = create<UiState>((set) => ({
   debugMode: false,
   logoTapCount: 0,
   message: "",
+  stageIntroPhase: "done",
 
   setScreen: (v) => set({ screen: v }),
   setShowRules: (v) => set((s) => ({ showRules: updater(s.showRules, v) })),
@@ -39,4 +44,5 @@ export const useUiStore = create<UiState>((set) => ({
   setDebugMode: (v) => set((s) => ({ debugMode: updater(s.debugMode, v) })),
   setLogoTapCount: (v) => set((s) => ({ logoTapCount: updater(s.logoTapCount, v) })),
   setMessage: (v) => set({ message: v }),
+  setStageIntroPhase: (v) => set({ stageIntroPhase: v }),
 }));
