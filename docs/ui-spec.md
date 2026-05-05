@@ -1,6 +1,6 @@
 # 🐱 にゃんこレスキュー UI仕様書
 
-**バージョン:** 2.4
+**バージョン:** 2.5
 **最終更新:** 2026/05/05
 
 ---
@@ -50,6 +50,21 @@ const cellSize = 38; // px、全ステージ共通
 | `glass.shadowFlag` | `0 8px 32px rgba(255,167,38,0.28), inset 0 1px 0 rgba(255,255,255,0.7), 0 0 0 2px rgba(255,193,7,0.5)` | フラグモード |
 
 互換性のため `WebkitBackdropFilter` も併記する（iOS Safari 対応）。
+
+### 1-3d. ステータス用 SVG アイコン (v2.5)
+
+ゲーム画面のステータス表示で使う絵文字を全て排し、`src/components/icons/StatusIcons.tsx` の SVG コンポーネントに置き換えた。
+
+| コンポーネント | 用途 | 既定サイズ | グラデ／配色 |
+|--------------|------|----------|------------|
+| `<HeartIcon>` | LIFE 表示 | 16px | `#ffd1d1 → #ef5350 → #c62828` 縦グラデ。失効時は outline (`#cfd8dc`) |
+| `<StarIcon>` | SCORE 表示 | 14px | `#fff59d → #ffb300 → #ef6c00` 縦グラデ |
+| `<CatHeadIcon>` | (予備、図鑑等) | 18px | パステル紫 ベース |
+| `<FlagIcon>` | フラグボタン／フッター | 16/12px | 単色（ON時 #fff、OFF時 #ffa726） |
+| `<BookIcon>` | 図鑑ボタン | 16px | スレートグレー (#546e7a) |
+| `<BulbIcon>` | フッターのヒント | 12px | アンバー (#ffb300) |
+
+各アイコンは `viewBox="0 0 24 24"` で統一、`stroke` に淡い白を入れて凹凸感を出す。
 
 ### 1-3c. セル開封状態の差別化方針 (v2.3)
 
@@ -189,68 +204,123 @@ animation: float 2.5s ease-in-out infinite
 ### 3-1. 全体構造
 
 ```
-┌────────────────────────────────┐
-│ 🌿 ステージ 1: にわ            │
-│                                │
-│ ❤️♥♥♥ 🐱0/4 ⭐0 [フラグ] [図鑑] │ ← ステータスバー
-│ [🍀バリア] [🛡 3s] [🔮 3] [✨選択中] │ ← アクティブ効果
-│                                │
-│ [猫48] ❤️回復  0%  ████░ [発動] │ ← スキルゲージ
-│                                │
-│ ┌──盤面──────────────────┐     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ │ □□□□□□□□              │     │
-│ └────────────────────────┘     │
-│                                │
-│ 保護した猫: [猫1][猫2]...       │
-│ 💡 フラグボタンでフラグモード切替 │
-└────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ ┌──ステージバッジ───────────┐         │
+│ │ [01]  STAGE                │         │ ← 番号プレート + ステージ名
+│ │       にわ                  │         │
+│ │       おうちの庭から         │         │
+│ └────────────────────────────┘         │
+│                                     │
+│ ┌──ステータスパネル─────────────────┐ │
+│ │ LIFE  │  CATS         │ SCORE │   │ │ ← 3ブロック+ボタン区分
+│ │ ♥♥♥   │  ●●●○ 3/4    │ ★ 1,250│[F][B]│
+│ └────────────────────────────────────┘ │
+│ [● ラッキー] [● バリア 3s] [● 予知 ×3] │ ← アクティブ効果ピル
+│                                     │
+│ [猫48] ● 回復     0%  ████░ [発動] │ ← スキルゲージ
+│                                     │
+│ ┌──盤面──────────────────┐         │
+│ │ □□□□□□□□              │         │
+│ │ ...                    │         │
+│ └────────────────────────┘         │
+│                                     │
+│ 保護した猫: [猫1][猫2]...             │
+│ [💡SVG] フラグボタンでフラグモード切替 │
+└─────────────────────────────────────┘
 ```
 
-### 3-2. ステージ名
+### 3-2. ステージバッジ (v2.5: 絵文字廃止)
+
+`<StageBadge>` (`src/components/StatusPanel.tsx`) に集約。
 
 ```
-textAlign: center, fontSize: 16, fontWeight: 700
-内容: "${emoji} ステージ ${idx+1}: ${name}"
+display: flex, alignItems: center, gap: 10, marginBottom: 8
+padding: 4px 10px 4px 4px
+background: rgba(255,255,255,0.40)
+backdropFilter: blur(12px) saturate(140%)
+border: 1px solid rgba(255,255,255,0.7)
+borderRadius: 14
+boxShadow: 0 4px 14px rgba(120,144,156,0.16), inset 0 1px 0 rgba(255,255,255,0.7)
 ```
 
-### 3-3. ステータスバー（v2.2: グラス化）
+**番号プレート:**
+- 36×36px, borderRadius 10
+- `linear-gradient(140deg, #fff, #e0eafc 60%, #cfd8dc 100%)`
+- 内ハイライト + 外凸シャドウ
+- 内容: `"01"〜"04"` (zero-pad), fontWeight 900, fontSize 14
+
+**右側テキスト:**
+- 上段: `STAGE` (fontSize 9, fontWeight 800, letter-spacing 0.16em, uppercase, color textSub)
+- 中段: ステージ名 (fontSize 16, fontWeight 900, color textMain, white text-shadow)
+- 下段: ステージキャプション (fontSize 10, fontWeight 600, color textSub) — `STAGES[i].caption`
+
+ステージごとに従来定義されていた絵文字 `stage.emoji` (🌿/🌳/🏪/🏚️) はゲーム画面では表示しない。`StageIntro` オーバーレイ内では引き続き使用。
+
+### 3-3. ステータスパネル (v2.5: SVGアイコン化＋グループ整理)
+
+`<StatusPanel>` (`src/components/StatusPanel.tsx`) に集約。1段ガラスパネル内に LIFE / CATS / SCORE / 操作ボタン を縦罫ディバイダで分割表示する。
 
 ```
-display: flex, gap: 12, alignItems: center, flexWrap: wrap, justifyContent: center
+display: flex, alignItems: center, gap: 10
+maxWidth: 360, width: 100%
 background: glass.bg
 backdropFilter: glass.blur (Webkit併記)
 border: glass.border
-borderRadius: 16, padding: 8px 16px
+borderRadius: 18, padding: 8px 12px
 boxShadow: glass.shadow
-fontSize: 14, fontWeight: 600, color: palette.textMain
+color: palette.textMain
 ```
 
-内容:
-- `❤️ {"♥".repeat(lives)}{"♡".repeat(3-lives)}`
-- `🐱 {rescued.length}/{stage.cats}`
-- `⭐ {score}`
-- フラグボタン（ON時オレンジグラデ）
-- 図鑑ボタン
+各セクション上部に **キャプション** (fontSize 9, fontWeight 800, letter-spacing 0.16em, uppercase, color textSub):
 
-### 3-4. アクティブ効果インジケータ
+| セクション | キャプション | 内容 |
+|-----------|------------|------|
+| LIFE      | `LIFE`     | ハートSVG×3 (`<HeartIcon>`、filled/outline 切替、ピンク〜赤グラデ) |
+| CATS      | `CATS`     | ドット進捗 (●○ パステル緑グラデ) + `N/M` テキスト |
+| SCORE     | `SCORE`    | 星SVG (`<StarIcon>`、黄〜オレンジグラデ) + `score.toLocaleString()` |
+| ボタン    | (無)       | フラグ/図鑑の円形SVGアイコンボタン |
 
-ステータスバー内にstateに応じてバッジ表示:
+**ディバイダ**: 1px 縦線、`linear-gradient(180deg, transparent, rgba(120,144,156,0.28) 30%, ... 70%, transparent)` (上下フェードで馴染ませる)。
 
-| 条件 | バッジ | 背景色 | 文字色 |
-|------|--------|--------|--------|
-| luckyShield | 🍀 バリア | #c8e6c9 | #2e7d32 |
-| barrierActive | 🛡 Ns | #cfd8dc | #37474f |
-| foreseeMode > 0 | 🔮 N | #e1bee7 | #4a148c |
-| crossSelecting | ✨ 選択中 | #ffe0b2 | #bf360c |
+**ハート (`<HeartIcon>`)**:
+- size 16px、`linearGradient` で `#ffd1d1 → #ef5350 → #c62828` のパステル赤
+- 失われたライフは outline のみ (color #cfd8dc)、`drop-shadow` 解除
 
-全て: padding 2px 8px, borderRadius 10, fontSize 11, fontWeight 800, animation: skillPulse
+**ねこドット**:
+- 8×8px 円、保護済み: `radial-gradient(35% 30%, #c8e6c9 0%, #66bb6a 60%, #2e7d32 100%)`
+  - グロー: `0 0 4px rgba(102,187,106,0.55)` + 内ハイ
+- 未保護: `rgba(176,190,197,0.35)` + うすいボーダー
+
+**フラグ/図鑑ボタン (`IconButton`)**:
+- 34×34px 円形、白半透明背景 (`rgba(255,255,255,0.55)`) + 1.5px 白縁 + 外凸シャドウ
+- ON 状態 (フラグモード): `linear-gradient(140deg, #ffa726, #ffa726cc)` + `0 3px 10px ${color}66` グロー
+- 図鑑ボタンは右上に保護数バッジ (`linear-gradient(140deg, #ff7043, #e64a19)` 円)
+- アイコンは `<FlagIcon>` / `<BookIcon>` (SVG, パステルカラー)
+
+### 3-4. アクティブ効果バッジ (v2.5: 絵文字廃止＋色ドット化)
+
+ステータスパネルの **直下** に独立した行で表示。スキル絵文字を完全廃止し、**スキル色ドット + テキスト** に統一。
+
+```
+display: flex, gap: 6, flexWrap: wrap, justifyContent: center
+
+各ピル:
+  background: rgba(255,255,255,0.55)
+  backdropFilter: blur(10px) saturate(140%)
+  border: 1px solid ${skill.color}66
+  borderRadius: 12, padding: 3px 10px 3px 8px
+  boxShadow: 0 2px 8px ${color}33, inset 0 1px 0 rgba(255,255,255,0.7)
+  animation: skillPulse {pulseMs}ms
+```
+
+ドット: 8×8px 円、`radial-gradient(circle at 30% 30%, #fff, ${skill.color} 70%)` + 二重外グロー (`0 0 6px ${color}, 0 0 10px ${color}88`)。
+
+| 条件 | ラベル | ドット色 | pulseMs |
+|------|--------|---------|---------|
+| luckyShield | `ラッキー シールド` | #66bb6a | 1500 |
+| barrierActive | `バリア Ns` | #78909c | 1000 |
+| foreseeMode > 0 | `予知 ×N` | #ab47bc | 1200 |
+| crossSelecting | `じゅうじサーチ 選択中` | #ffa726 | 1000 |
 
 ### 3-5. スキルゲージバー（v2.2: グラス化＋シーン演出）
 
@@ -268,6 +338,7 @@ boxShadow: glass.shadow
 - 100%時: `gaugeGlowPulse 1.6s ease-in-out infinite` でグロー強弱
 
 中: スキル名 + パーセント + プログレスバー
+- スキル名の左に **スキル色のドット** (7×7px、二重外グロー) を表示。`skill.icon` 絵文字は使用しない (v2.5)。
 - バー高さ: 10px、背景: `rgba(176,190,197,0.25)` ＋ 内影で凹み感
 - 上部に半透明白のグロッシーハイライト（高さ45%）を重ねる
 - transition: `width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)` でぷるん感
@@ -390,13 +461,17 @@ maxWidth: 90%, whiteSpace: nowrap
 - クリア: #c8e6c9
 - その他: #fff9c4
 
-### 3-9. フッター
+### 3-9. フッター (v2.5: 絵文字廃止)
 
 ```
-fontSize: 11, color: #888, textAlign: center, marginTop: 8
+fontSize: 11, color: palette.textSub, textAlign: center, marginTop: 8
+display: flex, alignItems: center, justifyContent: center, gap: 6
+fontWeight: 700
 ```
-- フラグON: "🚩 フラグモード：タップで旗を立てる/外す"
-- フラグOFF: "💡 フラグボタンでフラグモード切替"
+
+絵文字を SVG アイコンに置換:
+- フラグON: `<FlagIcon size=12 color=#ffa726>` + "フラグモード：タップで旗を立てる/外す"
+- フラグOFF: `<BulbIcon size=12 color=#ffb300>` + "フラグボタンでフラグモード切替"
 
 ---
 
