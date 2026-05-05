@@ -144,9 +144,9 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
         className={`${cellBase} border`}
         style={{
           width: cellSize, height: cellSize,
-          background: `linear-gradient(145deg, ${palette.dogBg}, #fbcfcf)`,
+          background: "linear-gradient(145deg, rgba(255,227,227,0.78), rgba(251,207,207,0.82))",
           borderColor: palette.dogBorder,
-          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(244,138,138,0.25)",
+          boxShadow: "inset 3px 3px 6px rgba(120,144,156,0.22), inset -2px -2px 4px rgba(255,255,255,0.65), 0 0 8px rgba(244,138,138,0.25)",
         }}
       >
         <Sprite name="dog" size={32} />
@@ -160,9 +160,9 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
         className={`${cellBase} border`}
         style={{
           width: cellSize, height: cellSize,
-          background: `linear-gradient(145deg, ${palette.catBg}, #d6ead8)`,
+          background: "linear-gradient(145deg, rgba(232,245,233,0.78), rgba(214,234,216,0.82))",
           borderColor: palette.catBorder,
-          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(165,214,167,0.3)",
+          boxShadow: "inset 3px 3px 6px rgba(120,144,156,0.22), inset -2px -2px 4px rgba(255,255,255,0.65), 0 0 8px rgba(165,214,167,0.3)",
           animation: cell.revealed ? "pop 0.3s ease-out" : undefined,
         }}
       >
@@ -173,14 +173,21 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
 
   const hasDog = cell.dogCount > 0;
   const hasCat = cell.catCount > 0;
+  const isEmpty = !hasDog && !hasCat;
   return (
     <div
-      className={`${cellBase} border gap-0.5 text-[13px] font-extrabold`}
+      className={`${cellBase} border gap-0.5 text-[13px]`}
       style={{
         width: cellSize, height: cellSize,
-        background: "linear-gradient(145deg, #fafbfd, #e6ecf2)",
-        borderColor: "#dde4ec",
-        boxShadow: "inset 2px 2px 5px rgba(176,190,197,0.35), inset -2px -2px 4px rgba(255,255,255,0.85)",
+        background: isEmpty
+          ? "rgba(255,255,255,0.42)"
+          : "linear-gradient(145deg, rgba(255,253,248,0.72), rgba(248,244,234,0.78))",
+        borderColor: isEmpty ? "rgba(255,255,255,0.55)" : "rgba(228,221,205,0.7)",
+        boxShadow: isEmpty
+          ? "inset 3px 3px 7px rgba(120,144,156,0.32), inset -2px -2px 4px rgba(255,255,255,0.55)"
+          : "inset 3px 3px 6px rgba(176,158,118,0.28), inset -2px -2px 4px rgba(255,255,255,0.7)",
+        fontWeight: 900,
+        textShadow: "0 1px 0 rgba(255,255,255,0.7), 0 0 2px rgba(255,255,255,0.5)",
       }}
     >
       {hasDog && <span style={{ color: palette.dogText }}>{cell.dogCount}</span>}

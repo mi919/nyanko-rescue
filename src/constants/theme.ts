@@ -21,13 +21,13 @@ export const palette = {
 
 // グラスモーフィズム共通トークン
 export const glass = {
-  bg: "rgba(255,255,255,0.45)",
-  bgStrong: "rgba(255,255,255,0.6)",
-  bgFlag: "rgba(255,236,179,0.5)",
+  bg: "rgba(255,255,255,0.42)",
+  bgStrong: "rgba(255,255,255,0.38)",
+  bgFlag: "rgba(255,236,179,0.38)",
   border: "1px solid rgba(255,255,255,0.7)",
   borderFlag: "1px solid rgba(255,193,7,0.65)",
-  blur: "blur(14px) saturate(140%)",
-  blurStrong: "blur(18px) saturate(160%)",
+  blur: "blur(16px) saturate(140%)",
+  blurStrong: "blur(22px) saturate(160%)",
   shadow: "0 8px 32px rgba(120,144,156,0.18), inset 0 1px 0 rgba(255,255,255,0.65)",
   shadowFlag: "0 8px 32px rgba(255,167,38,0.28), inset 0 1px 0 rgba(255,255,255,0.7), 0 0 0 2px rgba(255,193,7,0.5)",
 };
