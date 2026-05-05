@@ -18,7 +18,8 @@ import { UnlockBanner } from "../components/effects/UnlockBanner";
 import { PawEffects } from "../components/effects/PawEffects";
 import { Toast } from "../components/effects/Toast";
 import { CollectionModal } from "../components/modals/CollectionModal";
-import { useInitStage } from "../hooks/useInitStage";
+import { StageIntro } from "../components/effects/StageIntro";
+import { useInitStage, skipStageIntro } from "../hooks/useInitStage";
 import { SKILL_HANDLERS } from "../lib/skills";
 import { useUiStore } from "../stores/uiStore";
 import { useGameStore } from "../stores/gameStore";
@@ -55,6 +56,7 @@ export function GameScreen() {
   const setGameState = useGameStore(s => s.setGameState);
   const message = useUiStore(s => s.message);
   const setMessage = useUiStore(s => s.setMessage);
+  const stageIntroPhase = useUiStore(s => s.stageIntroPhase);
   const showCollection = useUiStore(s => s.showCollection);
   const setShowCollection = useUiStore(s => s.setShowCollection);
   const score = useGameStore(s => s.score);
@@ -618,7 +620,11 @@ export function GameScreen() {
         ))}
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+      <div style={{
+        position: "relative", zIndex: 1,
+        display: "flex", flexDirection: "column", alignItems: "center", width: "100%",
+        animation: stageIntroPhase === "exiting" ? "stageIntroUiRise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both" : undefined,
+      }}>
 
       <DogAttack active={dogAttack} />
 
@@ -639,6 +645,8 @@ export function GameScreen() {
       <CrossEffect effect={crossEffect} boardRef={boardRef} cols={stage.cols} />
 
       <Toast message={message} gameState={gameState} />
+
+      <StageIntro phase={stageIntroPhase} stage={stage} stageIdx={stageIdx} onSkip={skipStageIntro} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         <span style={{ fontSize: 22, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))" }}>{stage.emoji}</span>
@@ -840,7 +848,11 @@ export function GameScreen() {
         boxShadow: flagMode ? glass.shadowFlag : glass.shadow,
         marginBottom: 10,
         transition: "background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
-        animation: dogAttack ? "attackShake 0.6s ease-in-out" : (hintPhase !== "done" ? "boardFadeIn 0.4s ease-out" : "none"),
+        animation: dogAttack
+          ? "attackShake 0.6s ease-in-out"
+          : stageIntroPhase === "exiting"
+            ? "boardFadeIn 0.4s ease-out"
+            : "none",
       }}>
         {board.map((cell, i) => (
           <Cell key={i} cell={cell}

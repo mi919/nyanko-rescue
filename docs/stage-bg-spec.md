@@ -1,7 +1,7 @@
 # 🖼 ステージ背景画像 仕様書
 
-**バージョン:** 1.1
-**最終更新:** 2026/05/04
+**バージョン:** 1.2
+**最終更新:** 2026/05/05
 **ステータス:** ✅ 実装済み（PR `feat/stage-bg-integration`）
 
 ---
@@ -329,15 +329,22 @@ export const STAGE_BG_URLS: Record<string, string> = {
 
 ## 6. ステージ間遷移
 
-ステージ移行時に背景を切り替える際の演出案:
+ステージ移行時に背景を切り替える際の演出（v3.2 で全面刷新）:
 
-| 演出 | 用途 |
-|------|------|
-| **クロスフェード** (opacity 0→1, 0.5s) | 通常の `nextStage` 時 |
-| **ホワイトイン** (opacity 0, 白フラッシュ後にフェードイン) | クリアパネル「次のステージへ」押下時 |
-| **インスタント** | リトライ時（テンポ重視） |
+`useInitStage(idx)` の呼び出し時に `<StageIntro>` オーバーレイを 2.4s 表示し、
+新ステージの背景画像をフルスクリーンで主役にする。詳細は `animation-spec.md` §2-1 参照。
 
-実装は `STAGE_BG_URLS[stageIdx]` を `key` 付きで切り替え、`@keyframes ambientFadeIn 0.5s` を当てる。
+| フェーズ | 内容 | 時間 |
+|---------|------|------|
+| `curtain` | オーバーレイ全体 opacity 0→1。背景画像 scale(1.08)→1.0 ズームアウト開始 | 0–400ms |
+| `showing` | STAGE N → 区切り線 → 絵文字 → ステージ名 → キャプションを順次表示 | 400–2000ms |
+| `exiting` | オーバーレイ opacity 1→0 + translateY 0→-18px、UI が下から立ち上がる | 2000–2400ms |
+| `done` | ヒント演出（750ms）が始動 → 操作可能 | 2400ms 〜 |
+
+タップでスキップ可（短縮 exit 280ms → 即ヒントへ）。リトライ時もフル再生する。
+
+実装は `<StageIntro>` がステージ別 `bgImage` をそのまま `background-size: cover` で表示する。
+`STAGE_BG_URLS` 経由ではなく、`STAGES[stageIdx].bgImage` を直接参照する。
 
 ---
 

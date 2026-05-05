@@ -1,7 +1,7 @@
 # 🐱 にゃんこレスキュー アニメーション仕様書
 
-**バージョン:** 3.1
-**最終更新:** 2026/05/03
+**バージョン:** 3.2
+**最終更新:** 2026/05/05
 
 ---
 
@@ -21,9 +21,10 @@
 
 | カテゴリ | アニメーション数 | 用途 |
 |---------|--------------|------|
+| ステージオープニング | 9 | ステージ開始時の背景＋タイトル演出 |
 | 犬噛みつき | 4 | 犬マス開封時の衝撃演出 |
 | 猫保護 | 4 | 猫マス開封時の祝福演出 |
-| ヒント誘導 | 3 | ステージ開始の最初の1マス |
+| ヒント誘導 | 3 | オープニング後の最初の1マス |
 | スキルシステム | 9 | ゲージ・発動・透視・マーク・じゅうじ |
 | ステージクリア | 8 | クリア・パーフェクト・NEW BEST |
 | ゲームオーバー | 3 | 敗北演出 |
@@ -32,6 +33,79 @@
 | 肉球エフェクト | 1 | スキルで開いたマスの演出 |
 | アンロック | 1 | 新キャラ獲得バナー |
 | その他 | 5 | 紙吹雪・花びら等 |
+
+---
+
+## 2-1. ステージオープニング演出
+
+### トリガー: `useInitStage(idx)` 呼び出し時（タイトル「はじめる」/ 次のステージへ / リトライ）
+### 全体時間: 2400ms（タップで短縮スキップ可）
+
+`uiStore.stageIntroPhase` で `"curtain" → "showing" → "exiting" → "done"` の 4 段階を進行する。
+`<StageIntro>` オーバーレイ（z-index: 260）が画面全体を覆い、ステージ背景画像を主役にして
+`STAGE N` ラベル＋絵文字＋ステージ名＋短いキャプションを順次出す。
+
+| No. | 名前 | 時間 | easing | 対象 | 内容 |
+|-----|------|------|--------|------|------|
+| 1 | `stageIntroCurtain` | 0.4s | ease-out | オーバーレイ全体 | opacity 0→1 でフェードイン |
+| 2 | `stageIntroBgZoom` | 2.4s | cubic-bezier(0.22,1,0.36,1) | 背景画像 | scale(1.08)→1.0 のゆっくりズームアウト＋彩度復帰 |
+| 3 | `stageIntroVignette` | 2.4s | ease-out | 周辺ビネット | opacity 0.55→0.18 のビネット薄化 |
+| 4 | `stageIntroLabelIn` | 0.55s @0.15s | cubic-bezier(0.22,1,0.36,1) | "STAGE N" ラベル | translateY(-12px)→0、letter-spacing 0.6em→0.4em |
+| 5 | `stageIntroUnderline` | 0.5s @0.45s | cubic-bezier(0.22,1,0.36,1) | 区切り線 | scaleX(0)→1 |
+| 6 | `stageIntroEmojiIn` | 0.7s @0.3s | cubic-bezier(0.34,1.56,0.64,1) | ステージ絵文字 | scale(0.6)→1.15→1.0、回転＋バウンス |
+| 7 | `stageIntroTitleIn` | 0.55s @0.55s | cubic-bezier(0.22,1,0.36,1) | ステージ名 | translateY(18px)→0、blur(6px)→0 |
+| 8 | `stageIntroCaptionIn` | 0.55s @0.85s | ease-out | キャプション | translateY(10px)→0、opacity 0→0.9 |
+| 9 | `stageIntroExit` | 0.4s | ease-in | オーバーレイ全体 | opacity 1→0、translateY(0)→-18px |
+
+加えて、オーバーレイ消失と同期させた以下も同カテゴリに含む（key: `stageIntroUiRise`）:
+
+- ゲーム UI ラッパー（盤面・ステータス・ゲージを含む内側コンテナ）に `stageIntroUiRise 0.45s` を当て、
+  下から立ち上げる演出。`stageIntroPhase === "exiting"` の間だけ適用する。
+- 盤面コンテナの `boardFadeIn 0.4s` も `stageIntroPhase === "exiting"` 時のみ走らせ、
+  従来 `hintPhase !== "done"` で発火していた箇所と差し替え（ヒント開始時の二重フェードを防止）。
+
+### フェーズタイミング
+
+```
+0ms:    stageIntroPhase = "curtain"
+        → curtain + bgZoom + vignette 開始
+150ms:  STAGE Nラベル登場
+300ms:  ステージ絵文字バウンス
+400ms:  stageIntroPhase = "showing"
+450ms:  区切り線スライド
+550ms:  ステージ名スライドイン
+850ms:  キャプション登場
+2000ms: stageIntroPhase = "exiting"
+        → stageIntroExit + UI rise + board fade in 同時開始
+2400ms: stageIntroPhase = "done"
+        → ヒント演出（converge）が始動
+3150ms: ヒント完了 → 操作可能
+```
+
+### スキップ動作
+
+オーバーレイをタップすると `skipStageIntro()` が走り、以下の手順でショートカット:
+
+```
+即時:  stageIntroPhase = "exiting"（残りの自動タイムアウトを clearIntroTimeouts でキャンセル）
+       stageStartTime = Date.now() + 280  (スキップ時は短い exit を考慮)
+280ms: stageIntroPhase = "done"
+       → ヒント演出（converge）が始動
+```
+
+### スコアタイマーとの関係
+
+`gameStore.stageStartTime` はオープニング完了後に開始される（`Date.now() + 2400`）。
+スキップ時は短縮 exit を考慮して `Date.now() + 280` に補正する。
+これにより 2.4s の演出時間が「⚡ スピードクリア」ボーナス（30秒/60秒）を圧迫しない。
+
+### 注意事項
+
+- オーバーレイは z-index: 260 で **クリアパネル(270)・ゲームオーバー より下**、
+  通常 UI(z-index 1)・トースト(150)・モーダル(200) より上
+- `pointerEvents: "auto"` で全画面をスキップタップ領域として扱う
+- リトライ時もフル再生（仕様: 周回ごとの場所感を毎回見せたい）
+- ヒント演出は **オープニング完了後**に開始（並行して走らない）
 
 ---
 

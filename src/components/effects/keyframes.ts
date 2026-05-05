@@ -294,4 +294,49 @@ export const ALL_KEYFRAMES = `
     0%   { opacity: 0; }
     100% { opacity: 1; }
   }
+
+  @keyframes stageIntroCurtain {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes stageIntroBgZoom {
+    0%   { transform: scale(1.08); filter: brightness(0.85) saturate(1.1); }
+    100% { transform: scale(1.0);  filter: brightness(1)    saturate(1.0); }
+  }
+  @keyframes stageIntroVignette {
+    0%   { opacity: 0.55; }
+    60%  { opacity: 0.35; }
+    100% { opacity: 0.18; }
+  }
+  @keyframes stageIntroLabelIn {
+    0%   { opacity: 0; transform: translateY(-12px); letter-spacing: 0.6em; }
+    60%  { opacity: 1; transform: translateY(0);     letter-spacing: 0.4em; }
+    100% { opacity: 1; transform: translateY(0);     letter-spacing: 0.4em; }
+  }
+  @keyframes stageIntroEmojiIn {
+    0%   { opacity: 0; transform: translateY(20px) scale(0.6) rotate(-12deg); }
+    55%  { opacity: 1; transform: translateY(-4px) scale(1.15) rotate(4deg); }
+    80%  { transform: translateY(0)     scale(1.0)  rotate(0deg); }
+    100% { opacity: 1; transform: translateY(0)    scale(1.0)  rotate(0deg); }
+  }
+  @keyframes stageIntroTitleIn {
+    0%   { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+    100% { opacity: 1; transform: translateY(0);    filter: blur(0); }
+  }
+  @keyframes stageIntroCaptionIn {
+    0%   { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 0.9; transform: translateY(0); }
+  }
+  @keyframes stageIntroUnderline {
+    0%   { transform: scaleX(0); opacity: 0; }
+    100% { transform: scaleX(1); opacity: 1; }
+  }
+  @keyframes stageIntroExit {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-18px); }
+  }
+  @keyframes stageIntroUiRise {
+    0%   { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
 `;
