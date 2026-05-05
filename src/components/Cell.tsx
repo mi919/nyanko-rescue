@@ -82,10 +82,11 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
     } else if (cell.flagged) {
       background = "linear-gradient(145deg, #fff9c4, #fff59d)";
       shadow = "inset 2px 2px 4px rgba(255,255,255,0.6), 2px 2px 6px rgba(255,213,79,0.45)";
-      borderColor = "transparent";
+      borderColor = "rgba(245,158,11,0.5)";
     } else {
       background = `linear-gradient(145deg, ${palette.cellBaseHi}, ${palette.cellBaseLo})`;
       shadow = pressed ? NEU_PRESSED_SHADOW : NEU_REST_SHADOW;
+      borderColor = "rgba(255,255,255,0.85)";
     }
 
     return (
@@ -144,9 +145,9 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
         className={`${cellBase} border`}
         style={{
           width: cellSize, height: cellSize,
-          background: `linear-gradient(145deg, ${palette.dogBg}, #fbcfcf)`,
-          borderColor: palette.dogBorder,
-          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(244,138,138,0.25)",
+          background: "linear-gradient(145deg, rgba(255,227,227,0.65), rgba(251,207,207,0.70))",
+          borderColor: "rgba(244,138,138,0.55)",
+          boxShadow: "inset 3px 3px 6px rgba(120,144,156,0.25), inset -2px -2px 4px rgba(255,255,255,0.55), 0 0 10px rgba(244,138,138,0.3)",
         }}
       >
         <Sprite name="dog" size={32} />
@@ -160,9 +161,9 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
         className={`${cellBase} border`}
         style={{
           width: cellSize, height: cellSize,
-          background: `linear-gradient(145deg, ${palette.catBg}, #d6ead8)`,
-          borderColor: palette.catBorder,
-          boxShadow: "inset 1px 1px 3px rgba(255,255,255,0.6), 0 2px 6px rgba(165,214,167,0.3)",
+          background: "linear-gradient(145deg, rgba(232,245,233,0.65), rgba(214,234,216,0.70))",
+          borderColor: "rgba(165,214,167,0.55)",
+          boxShadow: "inset 3px 3px 6px rgba(120,144,156,0.25), inset -2px -2px 4px rgba(255,255,255,0.55), 0 0 10px rgba(165,214,167,0.35)",
           animation: cell.revealed ? "pop 0.3s ease-out" : undefined,
         }}
       >
@@ -173,14 +174,21 @@ export function Cell({ cell, onClick, onRightClick, gameOver, peeking, marked, f
 
   const hasDog = cell.dogCount > 0;
   const hasCat = cell.catCount > 0;
+  const isEmpty = !hasDog && !hasCat;
   return (
     <div
-      className={`${cellBase} border gap-0.5 text-[13px] font-extrabold`}
+      className={`${cellBase} border gap-0.5 text-[14px]`}
       style={{
         width: cellSize, height: cellSize,
-        background: "linear-gradient(145deg, #fafbfd, #e6ecf2)",
-        borderColor: "#dde4ec",
-        boxShadow: "inset 2px 2px 5px rgba(176,190,197,0.35), inset -2px -2px 4px rgba(255,255,255,0.85)",
+        background: isEmpty
+          ? "rgba(255,255,255,0.30)"
+          : "linear-gradient(145deg, rgba(255,253,248,0.48), rgba(248,244,234,0.55))",
+        borderColor: isEmpty ? "rgba(255,255,255,0.40)" : "rgba(228,221,205,0.55)",
+        boxShadow: isEmpty
+          ? "inset 4px 4px 8px rgba(120,144,156,0.36), inset -2px -2px 4px rgba(255,255,255,0.45)"
+          : "inset 4px 4px 7px rgba(176,158,118,0.32), inset -2px -2px 4px rgba(255,255,255,0.65)",
+        fontWeight: 900,
+        textShadow: "0 1px 0 rgba(255,255,255,0.9), 0 0 3px rgba(255,255,255,0.7), 0 0 6px rgba(255,255,255,0.4)",
       }}
     >
       {hasDog && <span style={{ color: palette.dogText }}>{cell.dogCount}</span>}
