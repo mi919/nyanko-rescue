@@ -21,6 +21,8 @@ import { CollectionModal } from "../components/modals/CollectionModal";
 import { StageIntro } from "../components/effects/StageIntro";
 import { useInitStage, skipStageIntro } from "../hooks/useInitStage";
 import { SKILL_HANDLERS } from "../lib/skills";
+import { StatusPanel, StageBadge, type ActiveBadge } from "../components/StatusPanel";
+import { BulbIcon, FlagIcon } from "../components/icons/StatusIcons";
 import { useUiStore } from "../stores/uiStore";
 import { useGameStore } from "../stores/gameStore";
 import { useSkillStore } from "../stores/skillStore";
@@ -648,84 +650,30 @@ export function GameScreen() {
 
       <StageIntro phase={stageIntroPhase} stage={stage} stageIdx={stageIdx} onSkip={skipStageIntro} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 22, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))" }}>{stage.emoji}</span>
-        <h2 style={{
-          fontSize: 18, fontWeight: 800, color: palette.textMain, margin: 0,
-          letterSpacing: "0.02em",
-          textShadow: "0 1px 2px rgba(255,255,255,0.6)",
-        }}>
-          ステージ {stageIdx + 1}: {stage.name}
-        </h2>
-      </div>
+      <StageBadge stageIdx={stageIdx} name={stage.name} caption={stage.caption} />
 
-      <div style={{
-        display: "flex", gap: 12, alignItems: "center", marginBottom: 10,
-        background: glass.bg,
-        backdropFilter: glass.blur,
-        WebkitBackdropFilter: glass.blur,
-        border: glass.border,
-        borderRadius: 16, padding: "8px 16px",
-        boxShadow: glass.shadow,
-        fontSize: 14, fontWeight: 600,
-        color: palette.textMain,
-        flexWrap: "wrap", justifyContent: "center",
-      }}>
-        <span>❤️ {"♥".repeat(lives)}{"♡".repeat(3 - lives)}</span>
-        <span>🐱 {rescued.length}/{stage.cats}</span>
-        <span>⭐ {score}</span>
-        {luckyShield && (
-          <span style={{
-            background: "#c8e6c9", color: "#2e7d32",
-            padding: "2px 8px", borderRadius: 10,
-            fontSize: 11, fontWeight: 800,
-            animation: "skillPulse 1.5s ease-in-out infinite",
-          }}>🍀 バリア</span>
-        )}
-        {barrierActive && (
-          <span style={{
-            background: "#cfd8dc", color: "#37474f",
-            padding: "2px 8px", borderRadius: 10,
-            fontSize: 11, fontWeight: 800,
-            animation: "skillPulse 1s ease-in-out infinite",
-          }}>🛡 {barrierRemaining}s</span>
-        )}
-        {foreseeMode > 0 && (
-          <span style={{
-            background: "#e1bee7", color: "#4a148c",
-            padding: "2px 8px", borderRadius: 10,
-            fontSize: 11, fontWeight: 800,
-            animation: "skillPulse 1.2s ease-in-out infinite",
-          }}>🔮 {foreseeMode}</span>
-        )}
-        {crossSelecting && (
-          <span style={{
-            background: "#ffe0b2", color: "#bf360c",
-            padding: "2px 8px", borderRadius: 10,
-            fontSize: 11, fontWeight: 800,
-            animation: "skillPulse 1s ease-in-out infinite",
-          }}>✨ 選択中</span>
-        )}
-        <button
-          onClick={() => setFlagMode(!flagMode)}
-          style={{
-            background: flagMode ? "linear-gradient(135deg, #ffd54f, #ffa726)" : "#fff",
-            border: flagMode ? "2px solid #f57c00" : "2px solid #ccc",
-            borderRadius: 16, padding: "4px 12px",
-            cursor: "pointer", fontSize: 12, fontWeight: 800,
-            color: flagMode ? "#fff" : "#666",
-            boxShadow: flagMode ? "0 2px 6px rgba(245,124,0,0.4)" : "none",
-            transition: "all 0.15s",
-          }}
-        >🚩 {flagMode ? "フラグON" : "フラグ"}</button>
-        <button
-          onClick={() => setShowCollection(!showCollection)}
-          style={{
-            background: "none", border: "1px solid #ccc", borderRadius: 8,
-            padding: "2px 8px", cursor: "pointer", fontSize: 12, color: "#666",
-          }}
-        >図鑑 {collection.length}</button>
-      </div>
+      {(() => {
+        const badges: ActiveBadge[] = [];
+        if (luckyShield) badges.push({ key: "lucky", label: "ラッキー シールド", color: "#66bb6a", pulseMs: 1500 });
+        if (barrierActive) badges.push({ key: "barrier", label: `バリア ${barrierRemaining}s`, color: "#78909c", pulseMs: 1000 });
+        if (foreseeMode > 0) badges.push({ key: "foresee", label: `予知 ×${foreseeMode}`, color: "#ab47bc", pulseMs: 1200 });
+        if (crossSelecting) badges.push({ key: "cross", label: "じゅうじサーチ 選択中", color: "#ffa726", pulseMs: 1000 });
+        return (
+          <div style={{ marginBottom: 10, width: "100%", display: "flex", justifyContent: "center" }}>
+            <StatusPanel
+              lives={lives}
+              rescued={rescued.length}
+              totalCats={stage.cats}
+              score={score}
+              collectionCount={collection.length}
+              flagMode={flagMode}
+              onToggleFlag={() => setFlagMode(!flagMode)}
+              onOpenCollection={() => setShowCollection(!showCollection)}
+              badges={badges}
+            />
+          </div>
+        );
+      })()}
 
       {/* Skill gauge bar */}
       {(() => {
@@ -769,10 +717,18 @@ export function GameScreen() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 fontSize: 10, fontWeight: 800, color: palette.textSub,
-                display: "flex", justifyContent: "space-between",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
                 letterSpacing: "0.04em",
               }}>
-                <span>{skill.icon} {skill.name}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: `radial-gradient(circle at 30% 30%, #fff, ${skill.color} 70%)`,
+                    boxShadow: `0 0 4px ${skill.color}, 0 0 8px ${skill.color}88`,
+                    flexShrink: 0,
+                  }} />
+                  <span style={{ color: palette.textMain, letterSpacing: "0.06em" }}>{skill.name}</span>
+                </span>
                 <span style={{ color: ready ? "#ff7043" : palette.textSub }}>{Math.floor(skillGauge)}%</span>
               </div>
               <div style={{
@@ -1126,8 +1082,20 @@ export function GameScreen() {
       <div style={{
         fontSize: 11, color: palette.textSub, marginTop: 8, textAlign: "center",
         textShadow: "0 1px 2px rgba(255,255,255,0.5)",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        fontWeight: 700,
       }}>
-        {flagMode ? "🚩 フラグモード：タップで旗を立てる/外す" : "💡 フラグボタンでフラグモード切替"}
+        {flagMode ? (
+          <>
+            <FlagIcon size={12} color="#ffa726" />
+            <span>フラグモード：タップで旗を立てる/外す</span>
+          </>
+        ) : (
+          <>
+            <BulbIcon size={12} color="#ffb300" />
+            <span>フラグボタンでフラグモード切替</span>
+          </>
+        )}
       </div>
 
       </div>
